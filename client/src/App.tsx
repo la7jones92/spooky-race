@@ -211,7 +211,7 @@ export default function App() {
                   variant="outline"
                   className="border-primary/30 text-primary"
                 >
-                  {earnedPoints}/{totalPoints} pts
+                  {earnedPoints}/{totalPoints} pts 
                 </Badge>
               </div>
             </div>
