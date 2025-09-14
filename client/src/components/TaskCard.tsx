@@ -50,7 +50,7 @@ export function TaskCard({ task, isUnlocked, isCompleted, onClick }: TaskCardPro
       </CardHeader>
       <CardContent>
         <p className={`text-sm ${isUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
-          {task.description}
+          {isUnlocked ? task.description : 'Locked'}
         </p>
         {isCompleted && (
           <div className="mt-3 flex items-center gap-2 text-sm text-primary">
