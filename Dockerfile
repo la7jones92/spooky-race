@@ -22,7 +22,7 @@ RUN sed -i 's/listen       80;/listen       8080;/' /etc/nginx/conf.d/default.co
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets
-COPY --from=build /app/client/dist /usr/share/nginx/html
+COPY --from=build /app/client/build /usr/share/nginx/html
 
 # Healthcheck (optional)
 HEALTHCHECK CMD wget -qO- http://127.0.0.1:8080/ || exit 1
