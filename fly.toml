@@ -1,17 +1,22 @@
-# fly.toml generated for Spooky Race static site on Fly.io
-# Replace the 'app' name after running `flyctl launch` if needed.
-app = "spooky-race-2025"  # change after `flyctl launch`
-primary_region = "syd"
+# fly.toml app configuration file generated for spooky-race-2025 on 2025-09-14T22:56:36+10:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'spooky-race-2025'
+primary_region = 'syd'
+
+[build]
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
 [[vm]]
-  memory = "256mb"
-  cpu_kind = "shared"
+  memory = '256mb'
+  cpu_kind = 'shared'
   cpus = 1
