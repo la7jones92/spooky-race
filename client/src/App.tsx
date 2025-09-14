@@ -179,7 +179,7 @@ export default function App() {
             <div className="flex items-center justify-center gap-3 mb-2">
               <Ghost className="w-8 h-8 text-primary" />
               <h1 className="text-3xl font-bold text-primary">
-                Spooky Race
+                Versent Spooky Race
               </h1>
               <Skull className="w-8 h-8 text-primary" />
             </div>
@@ -211,7 +211,7 @@ export default function App() {
                   variant="outline"
                   className="border-primary/30 text-primary"
                 >
-                  {earnedPoints}/{totalPoints} pts 
+                  {earnedPoints}/{totalPoints} pts
                 </Badge>
               </div>
             </div>
