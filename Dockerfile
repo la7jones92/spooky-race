@@ -1,30 +1,35 @@
-# Multi-stage build: build Vite app, then serve with nginx
-# ---- Build stage ----
+# syntax=docker/dockerfile:1
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy client package files and install deps
-COPY client/package.json client/package-lock.json ./client/
-RUN cd client && npm ci
+# Install server + client deps
+COPY package*.json ./
+COPY client/package*.json ./client/
+RUN npm ci
 
 # Copy source
-COPY client ./client
+COPY . .
 
-# Build
+# Build client + server
 RUN cd client && npm run build
+RUN npm run build
 
-# ---- Run stage ----
-FROM nginx:alpine AS run
-# Serve on 8080 for Fly.io (matches [http_service].internal_port)
-RUN sed -i 's/listen       80;/listen       8080;/' /etc/nginx/conf.d/default.conf || true
+# ---- Runtime ----
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
 
-# Replace default config with SPA-friendly config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install only production deps
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Copy built assets
-COPY --from=build /app/client/build /usr/share/nginx/html
+# Copy dist + prisma + client build
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/client/dist ./client/dist
+COPY --from=build /app/prisma ./prisma
 
-# Healthcheck (optional)
-HEALTHCHECK CMD wget -qO- http://127.0.0.1:8080/ || exit 1
+# Generate Prisma client
+RUN npx prisma generate
 
 EXPOSE 8080
+CMD ["npm", "start"]
