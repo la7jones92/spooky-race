@@ -4,14 +4,17 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Install server + client deps (NO scripts!)
+# Install deps (no lifecycle scripts so prisma doesn't run yet)
 COPY package*.json ./
 COPY client/package*.json ./client/
 RUN npm ci --ignore-scripts
 RUN cd client && npm ci --ignore-scripts
 
-# Copy source
+# Copy source (includes prisma/)
 COPY . .
+
+# Generate Prisma client BEFORE TypeScript build
+RUN npx prisma generate
 
 # Build client + server
 RUN cd client && npm run build
@@ -22,7 +25,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install only production deps (NO scripts!)
+# Prod deps only (still no lifecycle scripts)
 COPY package*.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
@@ -31,7 +34,7 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/client/dist ./client/dist
 COPY --from=build /app/prisma ./prisma
 
-# Now that prisma/ exists, generate the client
+# (Optional) Re-generate in runner to match runtime env; safe to keep or remove
 RUN npx prisma generate
 
 EXPOSE 8080
