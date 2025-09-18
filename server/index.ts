@@ -29,6 +29,7 @@ app.use((_req, res) => {
 });
 
 // const PORT = process.env.PORT || 8080;
-app.listen(8080, "0.0.0.0", () => {
-  console.log(`Listening on http://0.0.0.0:${8080}`);
+const PORT = Number(process.env.PORT) || 8080;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Listening on http://0.0.0.0:${PORT}`);
 });
