@@ -1,40 +1,43 @@
 # syntax=docker/dockerfile:1
 
-########## deps/build stage ##########
+########## build stage ##########
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Install deps (no lifecycle scripts so prisma doesn't run yet)
+# 1) Install deps WITHOUT lifecycle scripts (so prisma doesn't try to run yet)
 COPY package*.json ./
 COPY client/package*.json ./client/
 RUN npm ci --ignore-scripts
 RUN cd client && npm ci --ignore-scripts
 
-# Copy source (includes prisma/)
+# 2) Copy source (includes prisma/ and server/)
 COPY . .
 
-# Generate Prisma client BEFORE TypeScript build
+# 3) Generate Prisma BEFORE compiling TypeScript so @prisma/client types exist
 RUN npx prisma generate
 
-# Build client + server
+# 4) Build client + server
 RUN cd client && npm run build
 RUN npm run build
+
+# Sanity: ensure server output exists (fail early if not)
+RUN test -f dist/server/index.js || (echo 'dist/server/index.js missing' && ls -R dist && exit 1)
 
 ########## runtime stage ##########
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Prod deps only (still no lifecycle scripts)
+# 5) Prod deps only, again WITHOUT scripts
 COPY package*.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
-# Copy built artifacts and prisma schema
+# 6) Bring over built artifacts + prisma schema
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/client/dist ./client/dist
 COPY --from=build /app/prisma ./prisma
 
-# (Optional) Re-generate in runner to match runtime env; safe to keep or remove
+# 7) (Optional) Generate prisma in runtime layer too
 RUN npx prisma generate
 
 EXPOSE 8080
