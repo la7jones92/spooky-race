@@ -21,7 +21,7 @@ RUN cd client && npm run build
 RUN npm run build
 
 # Sanity: ensure server output exists (fail early if not)
-RUN test -f dist/server/index.js || (echo 'dist/server/index.js missing' && ls -R dist && exit 1)
+RUN test -f dist/index.js || (echo 'dist/index.js missing' && ls -R dist && exit 1)
 
 ########## runtime stage ##########
 FROM node:20-alpine AS runner
