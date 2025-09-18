@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { Lock, CheckCircle } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 export interface Task {
   id: number;
@@ -9,16 +9,22 @@ export interface Task {
   description: string;
   detailedDescription: string;
   points: number;
+  bonusPoints: number;
+  bonusPhotoDescription: string;
+  completionCode?: string;
+  hint?: string;
+  hintPenalty?: number;
 }
 
 interface TaskCardProps {
   task: Task;
   isUnlocked: boolean;
   isCompleted: boolean;
+  isSkipped: boolean;
   onClick: () => void;
 }
 
-export function TaskCard({ task, isUnlocked, isCompleted, onClick }: TaskCardProps) {
+export function TaskCard({ task, isUnlocked, isCompleted, isSkipped, onClick }: TaskCardProps) {
   return (
     <Card 
       className={`
@@ -38,24 +44,29 @@ export function TaskCard({ task, isUnlocked, isCompleted, onClick }: TaskCardPro
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             {!isUnlocked && <Lock className="w-4 h-4 text-muted-foreground" />}
-            {isCompleted && <CheckCircle className="w-4 h-4 text-primary" />}
             <span className={isUnlocked ? 'text-foreground' : 'text-muted-foreground'}>
-              {task.title}
+              {isUnlocked ? task.title : 'Locked'}
             </span>
           </CardTitle>
           <Badge variant={isCompleted ? 'default' : 'secondary'} className="bg-primary/20 text-primary border-primary/30">
-            {task.points} pts
+            {task.points + task.bonusPoints} pts
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
         <p className={`text-sm ${isUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
-          {isUnlocked ? task.description : 'Locked'}
+          {isUnlocked ? task.description : ''}
         </p>
         {isCompleted && (
           <div className="mt-3 flex items-center gap-2 text-sm text-primary">
-            <CheckCircle className="w-4 h-4" />
+            <span>✅</span>
             Completed!
+          </div>
+        )}
+        {isSkipped && (
+          <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>🚫</span>
+            Skipped!
           </div>
         )}
       </CardContent>
