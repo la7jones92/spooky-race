@@ -54,13 +54,13 @@ export function TaskDetailScreen({ task, isCompleted, isBonusCompleted, isSkippe
     }
     
     setErrorMessage('');
-    onComplete(task.id);
+    onComplete(task.order);
   };
 
   const handleTeamNameSubmit = () => {
     if (teamName.trim()) {
       setErrorMessage('');
-      onComplete(task.id, teamName.trim());
+      onComplete(task.order, teamName.trim());
     }
   };
 

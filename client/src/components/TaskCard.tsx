@@ -14,6 +14,7 @@ export interface Task {
   completionCode?: string;
   hint?: string;
   hintPenalty?: number;
+    order: number;
 }
 
 interface TaskCardProps {
