@@ -8,9 +8,9 @@ export interface Task {
   title: string;
   description: string;
   detailedDescription: string;
+  bonusPhotoDescription: string;
   points: number;
   bonusPoints: number;
-  bonusPhotoDescription: string;
   completionCode?: string;
   hint?: string;
   hintPenalty?: number;

@@ -11,8 +11,10 @@ app.use(express.json());
 
 // --- API routes ---
 app.get("/health", (_req, res) => res.send("ok"));
-app.get("/api/tasks", async (_req: express.Request, res: express.Response) => {
-  const items = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
+app.get("/api/tasks", async (_req, res) => {
+  const items = await prisma.task.findMany({
+    orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+  });
   res.json(items);
 });
 

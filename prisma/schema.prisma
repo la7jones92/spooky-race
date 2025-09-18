@@ -8,8 +8,17 @@ datasource db {
 }
 
 model Task {
-  id        String   @id @default(cuid())
-  title     String
-  done      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id                     Int      @id @default(autoincrement())
+  title                  String
+  description            String
+  detailedDescription    String
+  bonusPhotoDescription  String?
+  points                 Int      @default(0)
+  bonusPoints            Int      @default(0)
+  hint                   String?
+  hintPointsPenalty      Int      @default(0)
+  completionCode         String?  // text answer or code to submit
+  order                  Int?     // for sorting in UI
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }
