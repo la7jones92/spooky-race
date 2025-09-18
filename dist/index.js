@@ -7,6 +7,7 @@ const app = express();
 const prisma = new PrismaClient();
 app.use(express.json());
 // --- API routes ---
+app.get("/health", (_req, res) => res.send("ok"));
 app.get("/api/tasks", async (_req, res) => {
     const items = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
     res.json(items);
