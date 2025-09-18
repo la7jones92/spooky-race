@@ -18,14 +18,6 @@ app.get("/api/tasks", async (_req, res) => {
   res.json(items);
 });
 
-app.post("/api/tasks", async (req: express.Request, res: express.Response) => {
-  const { title } = req.body as { title?: string };
-  if (!title) return res.status(400).json({ error: "title is required" });
-
-  const item = await prisma.task.create({ data: { title } });
-  res.status(201).json(item);
-});
-
 // --- Serve built SPA ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
