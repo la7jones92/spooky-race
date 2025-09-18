@@ -21,12 +21,13 @@ ENV NODE_ENV=production
 
 # Install only production deps
 COPY package*.json ./
-RUN npm ci --omit=dev --ignore-scripts
 
 # Copy dist + prisma + client build
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/client/dist ./client/dist
 COPY --from=build /app/prisma ./prisma
+
+RUN npm ci --omit=dev
 
 # Generate Prisma client
 RUN npx prisma generate
