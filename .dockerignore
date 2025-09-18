@@ -24,3 +24,5 @@ client/**/*.njsproj
 client/**/*.sln
 client/**/*.sw?
 fly.toml
+
+dist
