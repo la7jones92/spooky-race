@@ -10,6 +10,7 @@ client/**/lerna-debug.log*
 
 client/**/node_modules
 client/**/dist
+client/**/build
 client/**/dist-ssr
 client/**/*.local
 
