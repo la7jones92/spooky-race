@@ -28,6 +28,87 @@ app.get("/api/tasks", async (_req, res) => {
   }
 });
 
+// GET /api/teamTasks?entryCode=GHO5T
+app.get("/api/teamTasks", async (req, res) => {
+  const entryCode = (req.query.entryCode as string | undefined)?.trim();
+  if (!entryCode) {
+    return res.status(400).json({ error: "Missing entryCode" });
+  }
+
+  try {
+    const team = await prisma.team.findUnique({
+      where: { entryCode },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    const teamTasks = await prisma.teamTask.findMany({
+      where: { teamId: team.id },
+      orderBy: { order: "asc" },
+      include: {
+        task: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            detailedDescription: true,
+            bonusPhotoDescription: true,
+            points: true,
+            bonusPoints: true,
+            hint: true,
+            hintPointsPenalty: true,
+            order: true,
+            createdAt: true,
+            updatedAt: true,
+            // 🚫 no completionCode here – keep it server-only
+          },
+        },
+        bonusPhoto: true,
+      },
+    });
+
+    res.json(teamTasks);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch team tasks" });
+  }
+});
+
+// GET /api/team?entryCode=GHO5T
+app.get("/api/team", async (req, res) => {
+  const entryCode = (req.query.entryCode as string | undefined)?.trim();
+  if (!entryCode) {
+    return res.status(400).json({ error: "Missing entryCode" });
+  }
+
+  try {
+    const team = await prisma.team.findUnique({
+      where: { entryCode },
+      select: {
+        id: true,
+        name: true,
+        hasEntered: true,
+        startedAt: true,
+        finishedAt: true,
+        totalPoints: true,
+        totalBonusPoints: true,
+        totalHintPenalties: true,
+      },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    res.json(team);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch team info" });
+  }
+});
+
 /**
  * Static client (built by Vite/React)
  * In the container, process.cwd() === /app
