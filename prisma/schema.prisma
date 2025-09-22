@@ -27,7 +27,7 @@ model Task {
   title                 String
   description           String
   detailedDescription   String?
-  completionCode        String?  @db.Citext // case-insensitive, exact match
+  completionCode        String? @db.Citext // case-insensitive, exact match
   points                Int
   bonusPhotoDescription String?
   bonusPoints           Int     @default(0)

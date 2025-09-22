@@ -1,14 +1,14 @@
 {
-  "type":"module",
+  "type": "module",
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.0",
-    "prisma": "^6.16.1",
+    "prisma": "^6.16.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.1",
+    "@prisma/client": "^6.16.2",
     "express": "^5.1.0"
   },
   "scripts": {
@@ -19,6 +19,6 @@
     "dev": "ts-node server/index.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "db:seed": "ts-node prisma/seed.ts"
+    "db:seed": "ts-node prisma/seed-teams.ts"
   }
 }
