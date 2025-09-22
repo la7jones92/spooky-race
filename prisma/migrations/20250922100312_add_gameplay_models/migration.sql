@@ -2,10 +2,7 @@
   Warnings:
 
   - The primary key for the `Task` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the column `description` on the `Task` table. All the data in the column will be lost.
-  - You are about to drop the column `order` on the `Task` table. All the data in the column will be lost.
-  - Added the required column `shortDescription` to the `Task` table without a default value. This is not possible if the table is not empty.
-  - Made the column `completionCode` on table `Task` required. This step will fail if there are existing NULL values in that column.
+  - Made the column `order` on table `Task` required. This step will fail if there are existing NULL values in that column.
 
 */
 -- CreateEnum
@@ -16,16 +13,13 @@ CREATE TYPE "public"."SubmissionResult" AS ENUM ('SUCCESS', 'FAILURE');
 
 -- AlterTable
 ALTER TABLE "public"."Task" DROP CONSTRAINT "Task_pkey",
-DROP COLUMN "description",
-DROP COLUMN "order",
-ADD COLUMN     "displayOrder" INTEGER NOT NULL DEFAULT 0,
-ADD COLUMN     "shortDescription" TEXT NOT NULL,
 ALTER COLUMN "id" DROP DEFAULT,
 ALTER COLUMN "id" SET DATA TYPE TEXT,
 ALTER COLUMN "detailedDescription" DROP NOT NULL,
 ALTER COLUMN "points" DROP DEFAULT,
-ALTER COLUMN "completionCode" SET NOT NULL,
 ALTER COLUMN "completionCode" SET DATA TYPE CITEXT,
+ALTER COLUMN "order" SET NOT NULL,
+ALTER COLUMN "order" SET DEFAULT 0,
 ADD CONSTRAINT "Task_pkey" PRIMARY KEY ("id");
 DROP SEQUENCE "Task_id_seq";
 
@@ -121,7 +115,7 @@ CREATE INDEX "Upload_teamId_idx" ON "public"."Upload"("teamId");
 CREATE INDEX "Task_completionCode_idx" ON "public"."Task"("completionCode");
 
 -- CreateIndex
-CREATE INDEX "Task_displayOrder_idx" ON "public"."Task"("displayOrder");
+CREATE INDEX "Task_order_idx" ON "public"."Task"("order");
 
 -- AddForeignKey
 ALTER TABLE "public"."TeamTask" ADD CONSTRAINT "TeamTask_bonusPhotoId_fkey" FOREIGN KEY ("bonusPhotoId") REFERENCES "public"."Upload"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -25,15 +25,15 @@ enum SubmissionResult {
 model Task {
   id                    String  @id @default(cuid())
   title                 String
-  shortDescription      String
+  description           String
   detailedDescription   String?
-  completionCode        String  @db.Citext // case-insensitive, exact match
+  completionCode        String?  @db.Citext // case-insensitive, exact match
   points                Int
   bonusPhotoDescription String?
   bonusPoints           Int     @default(0)
   hint                  String?
   hintPointsPenalty     Int     @default(0)
-  displayOrder          Int     @default(0) // admin-facing only
+  order                 Int     @default(0) // admin-facing only
 
   teamTasks TeamTask[]
 
@@ -41,7 +41,7 @@ model Task {
   updatedAt DateTime @updatedAt
 
   @@index([completionCode])
-  @@index([displayOrder])
+  @@index([order])
 }
 
 // Teams enter with a unique code; timer starts on first completed task (Team Name).
