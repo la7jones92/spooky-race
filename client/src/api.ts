@@ -1,5 +1,5 @@
 // client/src/api.ts
-import type { TeamTask } from "./types";
+import type { TeamTask } from "./types/game";
 
 const TEAM_CODE = "GHO5T"; // hard-coded for this test
 

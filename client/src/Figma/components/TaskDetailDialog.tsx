@@ -3,14 +3,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { CheckCircle, Trophy } from 'lucide-react';
-import { Task } from './TaskCard';
+import { Task } from '../types/game';
 
 interface TaskDetailDialogProps {
   task: Task | null;
   isCompleted: boolean;
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (taskId: number) => void;
+  onComplete: (taskId: string) => void;
 }
 
 export function TaskDetailDialog({ task, isCompleted, isOpen, onClose, onComplete }: TaskDetailDialogProps) {

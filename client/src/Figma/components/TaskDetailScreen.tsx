@@ -3,30 +3,34 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle } from 'lucide-react';
-import { Task } from './TaskCard';
+import { TeamTask, TaskStatus, SubmissionResult } from '../types/game';
 
 interface TaskDetailScreenProps {
-  task: Task;
-  isCompleted: boolean;
-  isBonusCompleted: boolean;
-  isSkipped: boolean;
-  isHintUsed: boolean;
+  teamTask: TeamTask;
   onBack: () => void;
-  onComplete: (taskId: number, teamName?: string) => void;
-  onBonusComplete: (taskId: number) => void;
-  onSkip: (taskId: number) => void;
-  onHintUse: (taskId: number) => void;
+  onSubmitCode: (taskId: string, code: string) => SubmissionResult;
+  onRegisterTeam: (teamName: string) => void;
+  onBonusSubmit: (taskId: string, file: File) => void;
+  onSkip: (taskId: string) => void;
+  onHintUse: (taskId: string) => void;
 }
 
-export function TaskDetailScreen({ task, isCompleted, isBonusCompleted, isSkipped, isHintUsed, onBack, onComplete, onBonusComplete, onSkip, onHintUse }: TaskDetailScreenProps) {
+export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onSkip, onHintUse }: TaskDetailScreenProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [textCode, setTextCode] = useState('');
   const [teamName, setTeamName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  const task = teamTask.task;
+  if (!task) return null;
+
+  const isCompleted = teamTask.status === TaskStatus.COMPLETED;
+  const isBonusCompleted = teamTask.bonusAwarded > 0;
+  const isSkipped = teamTask.status === TaskStatus.SKIPPED;
+  const isHintUsed = teamTask.hintUsed;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -37,30 +41,28 @@ export function TaskDetailScreen({ task, isCompleted, isBonusCompleted, isSkippe
 
   const handleBonusPhotoSubmit = () => {
     if (selectedFile) {
-      onBonusComplete(task.id);
+      onBonusSubmit(task.id, selectedFile);
     }
   };
 
   const handleCodeSubmit = () => {
     if (!textCode.trim()) return;
     
-    // Check if the code is correct
-    const correctCode = task.completionCode?.toLowerCase();
-    const enteredCode = textCode.trim().toLowerCase();
+    const result = onSubmitCode(task.id, textCode.trim());
     
-    if (correctCode && enteredCode !== correctCode) {
+    if (result === SubmissionResult.FAILURE) {
       setErrorMessage('Incorrect code. Please try again or use a hint.');
       return;
     }
     
     setErrorMessage('');
-    onComplete(task.order);
+    setTextCode('');
   };
 
   const handleTeamNameSubmit = () => {
     if (teamName.trim()) {
       setErrorMessage('');
-      onComplete(task.order, teamName.trim());
+      onRegisterTeam(teamName.trim());
     }
   };
 
@@ -72,19 +74,19 @@ export function TaskDetailScreen({ task, isCompleted, isBonusCompleted, isSkippe
     onSkip(task.id);
   };
 
-  const getSubmissionPlaceholder = (taskId: number) => {
-    const placeholders = {
-      2: "Enter: RIPPERSBLADE",
-      3: "Enter: GHOSTTRAIN",
-      4: "Enter: SLASHEDSECRET",
-      5: "Enter: FINALCURTAIN",
-      6: "Enter: CONDEMNED99",
-      7: "Enter: ANCESTORS",
-      8: "Enter: CAPTAINSCOIN",
-      9: "Enter: CELLSTOALES",
-      10: "Enter: LADYINBLACK"
+  const getSubmissionPlaceholder = (taskId: string) => {
+    const placeholders: Record<string, string> = {
+      "task-2": "Enter: RIPPERSBLADE",
+      "task-3": "Enter: GHOSTTRAIN",
+      "task-4": "Enter: SLASHEDSECRET",
+      "task-5": "Enter: FINALCURTAIN",
+      "task-6": "Enter: CONDEMNED99",
+      "task-7": "Enter: ANCESTORS",
+      "task-8": "Enter: CAPTAINSCOIN",
+      "task-9": "Enter: CELLSTOALES",
+      "task-10": "Enter: LADYINBLACK"
     };
-    return placeholders[taskId as keyof typeof placeholders] || "Enter completion code";
+    return placeholders[taskId] || "Enter completion code";
   };
 
   return (
@@ -132,7 +134,7 @@ export function TaskDetailScreen({ task, isCompleted, isBonusCompleted, isSkippe
             
             {/* Submission Form */}
             <div className="border-t border-border pt-6">
-              {task.id === 1 ? (
+              {task.id === "task-1" ? (
                 /* Team Name Registration */
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -232,7 +234,7 @@ export function TaskDetailScreen({ task, isCompleted, isBonusCompleted, isSkippe
                                   Use Hint?
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Using a hint will cost you {task.hintPenalty || 5} points. Your final score for this task will be reduced from {task.points} to {task.points - (task.hintPenalty || 5)} points.
+                                  Using a hint will cost you {task.hintPointsPenalty || 5} points. Your final score for this task will be reduced from {task.points} to {task.points - (task.hintPointsPenalty || 5)} points.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
