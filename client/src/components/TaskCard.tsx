@@ -1,21 +1,7 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Lock } from 'lucide-react';
-
-export interface Task {
-  id: number;
-  title: string;
-  description: string;
-  detailedDescription: string;
-  bonusPhotoDescription: string;
-  points: number;
-  bonusPoints: number;
-  completionCode?: string;
-  hint?: string;
-  hintPenalty?: number;
-    order: number;
-}
+import { Task } from '../types';
 
 interface TaskCardProps {
   task: Task;
