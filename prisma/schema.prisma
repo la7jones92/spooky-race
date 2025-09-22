@@ -1,24 +1,138 @@
-generator client {
-  provider = "prisma-client-js"
-}
+// prisma/schema.prisma
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum TaskStatus {
+  LOCKED
+  UNLOCKED
+  COMPLETED
+  SKIPPED
+}
+
+enum SubmissionResult {
+  SUCCESS
+  FAILURE
+}
+
+// Template task for the single event
 model Task {
-  id                     Int      @id @default(autoincrement())
-  title                  String
-  description            String
-  detailedDescription    String
-  bonusPhotoDescription  String?
-  points                 Int      @default(0)
-  bonusPoints            Int      @default(0)
-  hint                   String?
-  hintPointsPenalty      Int      @default(0)
-  completionCode         String?  // text answer or code to submit
-  order                  Int?     // for sorting in UI
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                    String  @id @default(cuid())
+  title                 String
+  shortDescription      String
+  detailedDescription   String?
+  completionCode        String  @db.Citext // case-insensitive, exact match
+  points                Int
+  bonusPhotoDescription String?
+  bonusPoints           Int     @default(0)
+  hint                  String?
+  hintPointsPenalty     Int     @default(0)
+  displayOrder          Int     @default(0) // admin-facing only
+
+  teamTasks TeamTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([completionCode])
+  @@index([displayOrder])
+}
+
+// Teams enter with a unique code; timer starts on first completed task (Team Name).
+model Team {
+  id         String  @id @default(cuid())
+  name       String?
+  entryCode  String  @unique @db.Citext
+  hasEntered Boolean @default(false)
+
+  startedAt  DateTime?
+  finishedAt DateTime?
+
+  totalPoints        Int @default(0)
+  totalBonusPoints   Int @default(0)
+  totalHintPenalties Int @default(0)
+
+  tasks       TeamTask[]
+  submissions Submission[]
+  uploads     Upload[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Per-team instance of a task
+model TeamTask {
+  id     String @id @default(cuid())
+  teamId String
+  taskId String
+
+  /// Per-team sequence number (1..N)
+  order Int
+
+  status TaskStatus @default(LOCKED)
+
+  unlockedAt  DateTime?
+  completedAt DateTime?
+  skippedAt   DateTime?
+
+  hintUsed      Boolean @default(false)
+  pointsAwarded Int     @default(0)
+  bonusAwarded  Int     @default(0)
+
+  bonusPhotoId String?
+  bonusPhoto   Upload? @relation(fields: [bonusPhotoId], references: [id])
+
+  team        Team         @relation(fields: [teamId], references: [id])
+  task        Task         @relation(fields: [taskId], references: [id])
+  submissions Submission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teamId, order])
+  @@unique([teamId, taskId])
+  @@index([status])
+}
+
+// Audit all code attempts
+model Submission {
+  id            String           @id @default(cuid())
+  teamId        String
+  teamTaskId    String
+  providedCode  String           @db.Citext
+  result        SubmissionResult
+  matchedTaskId String?
+
+  createdAt DateTime @default(now())
+
+  team     Team     @relation(fields: [teamId], references: [id])
+  teamTask TeamTask @relation(fields: [teamTaskId], references: [id])
+
+  @@index([teamId])
+  @@index([teamTaskId])
+  @@index([result])
+}
+
+// Bonus photos (choose either url or blob per row; enforced in app code)
+model Upload {
+  id          String  @id @default(cuid())
+  url         String? // e.g., S3/R2 URL
+  blob        Bytes? // Postgres BYTEA (you can base64 at the edge if needed)
+  contentType String
+  sizeBytes   Int
+  filename    String?
+
+  teamId String?
+  team   Team?   @relation(fields: [teamId], references: [id])
+
+  createdAt DateTime   @default(now())
+  TeamTask  TeamTask[]
+
+  @@index([teamId])
 }
