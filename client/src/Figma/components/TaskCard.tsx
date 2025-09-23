@@ -50,7 +50,6 @@ export function TaskCard({ teamTask, onClick }: TaskCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            {teamTask.status === TaskStatus.LOCKED && <Lock className="w-4 h-4 text-muted-foreground" />}
             <span className={isUnlocked ? 'text-foreground' : 'text-muted-foreground'}>
               {teamTask.status === TaskStatus.LOCKED ? `${statusDisplay.icon} Locked` : task.title}
             </span>
