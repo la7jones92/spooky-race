@@ -5,6 +5,8 @@ import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
 import { SubmissionResult, TaskStatus, TeamTask } from "./Figma/types/game";
 import { LoginScreen } from "./Figma/components/LoginScreen";
+import { uploadBonusPhotoBase64 } from "./api";
+import { compressImageToUnder5MB, blobToBase64Data } from "./utils/image";
 
 export default function App() {
   const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
@@ -190,9 +192,62 @@ const handleSubmitCode = async (taskId: string, code: string): Promise<Submissio
   }
 };
 
-  const handleBonusSubmit = (taskId: string, file: File) => {
-    gameLogic.submitBonusPhoto(taskId, file);
-  };
+const handleBonusSubmit = async (taskId: string, file: File) => {
+  try {
+    const entryCode = localStorage.getItem("entryCode");
+    if (!entryCode) throw new Error("Not logged in");
+
+    // 1) compress to ≤ 5MB
+    const { blob, type } = await compressImageToUnder5MB(file);
+    const base64 = await blobToBase64Data(blob);
+
+    // 2) upload (base64 JSON)
+    const resp = await uploadBonusPhotoBase64({
+      entryCode,
+      taskId,
+      filename: file.name,
+      contentType: type,
+      sizeBytes: blob.size,
+      dataBase64: base64,
+    });
+
+    // 3) update list
+    setTeamTasks((prev) =>
+      prev.map((tt) =>
+        tt.taskId === taskId
+          ? {
+              ...tt,
+              bonusAwarded: resp.teamTask.bonusAwarded ?? 0,
+              bonusPhotoId: resp.teamTask.bonusPhotoId ?? null,
+            }
+          : tt
+      )
+    );
+
+    // 4) update open detail
+    setSelectedTeamTask((prev) =>
+      prev && prev.taskId === taskId
+        ? {
+            ...prev,
+            bonusAwarded: resp.teamTask.bonusAwarded ?? 0,
+            bonusPhotoId: resp.teamTask.bonusPhotoId ?? null,
+          }
+        : prev
+    );
+
+    // 5) update totals
+    setGameState((prev) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        totalBonusPoints:
+          resp.totals?.totalBonusPoints ?? prev.team.totalBonusPoints,
+      },
+    }));
+  } catch (e: any) {
+    setError(e?.message || "Bonus upload failed");
+  }
+};
 
 const handleTaskSkip = async (taskId: string) => {
   try {

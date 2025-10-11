@@ -87,6 +87,7 @@ export async function skipTask(
   }
   return res.json();
 }
+
 export async function submitTaskCode(
   entryCode: string,
   taskId: string,
@@ -129,6 +130,30 @@ export async function registerTeamApi(entryCode: string, teamName: string): Prom
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Register failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}
+
+export async function uploadBonusPhotoBase64(params: {
+  entryCode: string;
+  taskId: string;
+  filename?: string;
+  contentType: string;
+  sizeBytes: number;
+  dataBase64: string;
+}): Promise<{
+  teamTask: { taskId: string; bonusAwarded: number; bonusPhotoId: string | null };
+  totals: { totalBonusPoints: number };
+}> {
+  const res = await fetch("/api/teamTasks/bonusPhoto", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Bonus upload failed (${res.status}): ${text}`);
   }
   return res.json();
 }

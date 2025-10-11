@@ -6,7 +6,7 @@ import { PrismaClient } from "@prisma/client";
 const app = express();
 const prisma = new PrismaClient();
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 /**
  * API routes (keep these ABOVE the SPA fallback)
@@ -425,6 +425,92 @@ app.post("/api/team/register", async (req, res) => {
   } catch (err) {
     console.error("POST /api/team/register failed:", err);
     return res.status(500).json({ error: "Failed to register team" });
+  }
+});
+
+app.post("/api/teamTasks/bonusPhoto", async (req, res) => {
+  const { entryCode, taskId, filename, contentType, sizeBytes, dataBase64 } = req.body ?? {};
+  if (!entryCode || !taskId || !dataBase64 || !contentType) {
+    return res.status(400).json({ error: "Missing entryCode, taskId, dataBase64 or contentType" });
+  }
+
+  try {
+    const team = await prisma.team.findUnique({
+      where: { entryCode },
+      select: { id: true, totalBonusPoints: true },
+    });
+    if (!team) return res.status(404).json({ error: "Team not found" });
+
+    const tt = await prisma.teamTask.findUnique({
+      where: { teamId_taskId: { teamId: team.id, taskId } },
+      include: { task: { select: { bonusPoints: true } } },
+    });
+    if (!tt) return res.status(404).json({ error: "TeamTask not found" });
+    if (tt.status !== "COMPLETED") {
+      return res.status(400).json({ error: "Bonus photo allowed only after completion" });
+    }
+
+    // Decode & enforce size
+    const buffer = Buffer.from(dataBase64, "base64");
+    const MAX = 5 * 1024 * 1024; // 5 MB
+    if (buffer.length > MAX) {
+      return res.status(413).json({ error: "Image too large after compression (>5MB)" });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // If we already have a photo & award, just return current state (idempotent)
+      if (tt.bonusPhotoId && (tt.bonusAwarded ?? 0) > 0) {
+        const current = await tx.teamTask.findUnique({
+          where: { id: tt.id },
+          select: { id: true, taskId: true, bonusAwarded: true, bonusPhotoId: true },
+        });
+        return { updatedTT: current!, updatedTeam: { totalBonusPoints: team.totalBonusPoints } };
+      }
+
+      // Create the Upload row
+      const upload = await tx.upload.create({
+        data: {
+          blob: buffer,
+          contentType,
+          sizeBytes: buffer.length,
+          filename: filename ?? null,
+          teamId: team.id,
+        },
+        select: { id: true },
+      });
+
+      // Link photo; award points only once
+      const award = (tt.bonusAwarded ?? 0) > 0 ? 0 : (tt.task?.bonusPoints ?? 0);
+
+      const updatedTT = await tx.teamTask.update({
+        where: { id: tt.id },
+        data: {
+          bonusPhotoId: upload.id,
+          bonusAwarded: (tt.bonusAwarded ?? 0) + award,
+        },
+        select: { id: true, taskId: true, bonusAwarded: true, bonusPhotoId: true },
+      });
+
+      let updatedTeam = { totalBonusPoints: team.totalBonusPoints };
+      if (award > 0) {
+        const t2 = await tx.team.update({
+          where: { id: team.id },
+          data: { totalBonusPoints: team.totalBonusPoints + award },
+          select: { totalBonusPoints: true },
+        });
+        updatedTeam = { totalBonusPoints: t2.totalBonusPoints };
+      }
+
+      return { updatedTT, updatedTeam };
+    });
+
+    return res.json({
+      teamTask: result.updatedTT,
+      totals: { totalBonusPoints: result.updatedTeam.totalBonusPoints },
+    });
+  } catch (err) {
+    console.error("POST /api/teamTasks/bonusPhoto failed:", err);
+    return res.status(500).json({ error: "Failed to upload bonus photo" });
   }
 });
 
