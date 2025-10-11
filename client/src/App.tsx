@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchTeam, fetchTeamTasks } from "./api";
+import { fetchTeam, fetchTeamTasks, useHint } from "./api";
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
@@ -79,10 +79,39 @@ useEffect(() => {
   const handleTaskSkip = (taskId: string) => {
     gameLogic.skipTask(taskId);
   };
+  
+const handleHintUse = async (taskId: string) => {
+  try {
+    const entryCode = localStorage.getItem("entryCode");
+    if (!entryCode) throw new Error("Not logged in");
 
-  const handleHintUse = (taskId: string) => {
-    gameLogic.useHint(taskId);
-  };
+    const resp = await useHint(entryCode, taskId);
+
+    // 1) Update the list
+    setTeamTasks((prev) =>
+      prev.map((tt) =>
+        tt.taskId === taskId ? { ...tt, hintUsed: true } : tt
+      )
+    );
+
+    // 2) Update the open detail item (so the hint shows immediately)
+    setSelectedTeamTask((prev) =>
+      prev && prev.taskId === taskId ? { ...prev, hintUsed: true } : prev
+    );
+
+    // 3) Keep totals in sync (optional but nice)
+    setGameState((prev) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        totalHintPenalties:
+          resp.totals?.totalHintPenalties ?? prev.team.totalHintPenalties,
+      },
+    }));
+  } catch (e: any) {
+    setError(e?.message || "Using hint failed");
+  }
+};
 
   const handleBackToTasks = () => {
     setCurrentScreen("tasks");

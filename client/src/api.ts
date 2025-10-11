@@ -47,3 +47,23 @@ export async function fetchTeamTasks(entryCode: string): Promise<TeamTask[]> {
   }
   return (await res.json()) as TeamTask[];
 }
+
+export async function useHint(entryCode: string, taskId: string): Promise<{
+  teamTask: { id: string; taskId: string; hintUsed: boolean };
+  hint: string;
+  hintPointsPenalty: number;
+  totals: { totalHintPenalties: number };
+}> {
+  const res = await fetch("/api/teamTasks/hint", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ entryCode, taskId }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Use hint failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}

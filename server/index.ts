@@ -109,6 +109,74 @@ app.get("/api/team", async (req, res) => {
   }
 });
 
+app.post("/api/teamTasks/hint", async (req, res) => {
+  const { entryCode, taskId } = req.body ?? {};
+
+  if (!entryCode || !taskId) {
+    return res.status(400).json({ error: "Missing entryCode or taskId" });
+  }
+
+  try {
+    // 1) Find the team by entry code (CITEXT unique in DB)
+    const team = await prisma.team.findUnique({
+      where: { entryCode },
+      select: { id: true, totalHintPenalties: true },
+    });
+    if (!team) return res.status(404).json({ error: "Team not found" });
+
+    // 2) Find the per-team task (include the template Task for hint/penalty)
+    const teamTask = await prisma.teamTask.findUnique({
+      where: { teamId_taskId: { teamId: team.id, taskId } },
+      include: { task: { select: { hint: true, hintPointsPenalty: true } } },
+    });
+    if (!teamTask) return res.status(404).json({ error: "TeamTask not found" });
+
+    const hint = teamTask.task?.hint ?? null;
+    const penalty = teamTask.task?.hintPointsPenalty ?? 0;
+
+    if (!hint) {
+      return res.status(400).json({ error: "No hint available for this task" });
+    }
+    
+const result = await prisma.$transaction(async (tx) => {
+  if (!teamTask.hintUsed) {
+    const updatedTeamTask = await tx.teamTask.update({
+      where: { id: teamTask.id },
+      data: { hintUsed: true },
+      select: { id: true, taskId: true, hintUsed: true },
+    });
+    const updatedTeam = await tx.team.update({
+      where: { id: team.id },
+      data: { totalHintPenalties: team.totalHintPenalties + penalty },
+      select: { totalHintPenalties: true },
+    });
+    return { updatedTeamTask, updatedTeam };
+  } else {
+    return {
+      updatedTeamTask: {
+        id: teamTask.id,
+        taskId: teamTask.taskId,
+        hintUsed: true,
+      },
+      updatedTeam: { totalHintPenalties: team.totalHintPenalties },
+    };
+  }
+});
+
+const { updatedTeamTask, updatedTeam } = result;
+
+    return res.json({
+      teamTask: updatedTeamTask,
+      hint,
+      hintPointsPenalty: penalty,
+      totals: { totalHintPenalties: updatedTeam.totalHintPenalties },
+    });
+  } catch (err) {
+    console.error("POST /api/teamTasks/hint failed:", err);
+    return res.status(500).json({ error: "Failed to use hint" });
+  }
+});
+
 /**
  * Static client (built by Vite/React)
  * In the container, process.cwd() === /app
