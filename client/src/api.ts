@@ -67,3 +67,23 @@ export async function useHint(entryCode: string, taskId: string): Promise<{
   }
   return res.json();
 }
+
+export async function skipTask(
+  entryCode: string,
+  taskId: string
+): Promise<{
+  current: { id: string; taskId: string; status: string; skippedAt?: string };
+  next?: { id: string; taskId: string; status: string; unlockedAt?: string };
+}> {
+  const res = await fetch("/api/teamTasks/skip", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ entryCode, taskId }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Skip failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}

@@ -177,6 +177,72 @@ const { updatedTeamTask, updatedTeam } = result;
   }
 });
 
+app.post("/api/teamTasks/skip", async (req, res) => {
+  const { entryCode, taskId } = req.body ?? {};
+  if (!entryCode || !taskId) {
+    return res.status(400).json({ error: "Missing entryCode or taskId" });
+  }
+
+  try {
+    const team = await prisma.team.findUnique({
+      where: { entryCode },
+      select: { id: true },
+    });
+    if (!team) return res.status(404).json({ error: "Team not found" });
+
+    const current = await prisma.teamTask.findUnique({
+      where: { teamId_taskId: { teamId: team.id, taskId } },
+      select: { id: true, taskId: true, order: true, status: true },
+    });
+    if (!current) return res.status(404).json({ error: "TeamTask not found" });
+    if (current.status === "COMPLETED") {
+      return res.status(400).json({ error: "Task already completed" });
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1) Mark current as SKIPPED (idempotent)
+      const updatedCurrent =
+        current.status === "SKIPPED"
+          ? await tx.teamTask.findUnique({
+              where: { id: current.id },
+              select: { id: true, taskId: true, status: true, skippedAt: true },
+            })
+          : await tx.teamTask.update({
+              where: { id: current.id },
+              data: { status: "SKIPPED", skippedAt: new Date(), pointsAwarded: 0 },
+              select: { id: true, taskId: true, status: true, skippedAt: true },
+            });
+
+      // 2) Unlock next (if locked)
+      const next = await tx.teamTask.findUnique({
+        where: { teamId_order: { teamId: team.id, order: current.order + 1 } },
+        select: { id: true, taskId: true, status: true, unlockedAt: true },
+      });
+
+      let updatedNext = null as
+        | { id: string; taskId: string; status: string; unlockedAt: Date | null }
+        | null;
+
+      if (next && next.status === "LOCKED") {
+        updatedNext = await tx.teamTask.update({
+          where: { id: next.id },
+          data: { status: "UNLOCKED", unlockedAt: new Date() },
+          select: { id: true, taskId: true, status: true, unlockedAt: true },
+        });
+      } else if (next) {
+        updatedNext = next;
+      }
+
+      return { updatedCurrent, updatedNext };
+    });
+
+    return res.json({ current: result.updatedCurrent, next: result.updatedNext });
+  } catch (err) {
+    console.error("POST /api/teamTasks/skip failed:", err);
+    return res.status(500).json({ error: "Failed to skip task" });
+  }
+});
+
 /**
  * Static client (built by Vite/React)
  * In the container, process.cwd() === /app

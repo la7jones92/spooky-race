@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { fetchTeam, fetchTeamTasks, useHint } from "./api";
+import { fetchTeam, fetchTeamTasks, skipTask, useHint } from "./api";
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
-import { SubmissionResult, TeamTask } from "./Figma/types/game";
+import { SubmissionResult, TaskStatus, TeamTask } from "./Figma/types/game";
 import { LoginScreen } from "./Figma/components/LoginScreen";
 
 export default function App() {
@@ -76,9 +76,42 @@ useEffect(() => {
     gameLogic.submitBonusPhoto(taskId, file);
   };
 
-  const handleTaskSkip = (taskId: string) => {
-    gameLogic.skipTask(taskId);
-  };
+const handleTaskSkip = async (taskId: string) => {
+  try {
+    const entryCode = localStorage.getItem("entryCode");
+    if (!entryCode) throw new Error("Not logged in");
+
+    const resp = await skipTask(entryCode, taskId);
+
+    // 1) Update list state
+    setTeamTasks((prev) =>
+      prev.map((tt) => {
+        if (tt.taskId === taskId) {
+          return {
+            ...tt,
+            status: TaskStatus.SKIPPED,
+            skippedAt: resp.current.skippedAt ?? new Date().toISOString(),
+            pointsAwarded: 0,
+          };
+        }
+        if (resp.next && tt.taskId === resp.next.taskId) {
+          return {
+            ...tt,
+            status: TaskStatus.UNLOCKED,
+            unlockedAt: resp.next.unlockedAt ?? new Date().toISOString(),
+          };
+        }
+        return tt;
+      })
+    );
+
+    // 2) If detail view is open for this task, close & go back to list
+    setSelectedTeamTask(null);
+    setCurrentScreen("tasks");
+  } catch (e: any) {
+    setError(e?.message || "Skipping failed");
+  }
+};
   
 const handleHintUse = async (taskId: string) => {
   try {
