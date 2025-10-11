@@ -1,7 +1,7 @@
 // server/index.ts
 import express from "express";
 import path from "path";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, SubmissionResult as SubmissionResultEnum } from "@prisma/client";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -243,7 +243,6 @@ app.post("/api/teamTasks/skip", async (req, res) => {
   }
 });
 
-// Submit completion code for a task (NOT Task 1)
 app.post("/api/teamTasks/submit", async (req, res) => {
   const { entryCode, taskId, code } = req.body ?? {};
   if (!entryCode || !taskId || typeof code !== "string") {
@@ -251,96 +250,161 @@ app.post("/api/teamTasks/submit", async (req, res) => {
   }
 
   try {
+    // 1) Find team
     const team = await prisma.team.findUnique({
       where: { entryCode },
       select: { id: true, totalPoints: true },
     });
     if (!team) return res.status(404).json({ error: "Team not found" });
 
+    // 2) Load TeamTask + Task (for completionCode/points/penalty/order)
     const teamTask = await prisma.teamTask.findUnique({
       where: { teamId_taskId: { teamId: team.id, taskId } },
       include: {
-        task: { select: { completionCode: true, points: true, hintPointsPenalty: true, order: true } },
+        task: {
+          select: {
+            completionCode: true,
+            points: true,
+            hintPointsPenalty: true,
+            order: true,
+          },
+        },
       },
     });
     if (!teamTask) return res.status(404).json({ error: "TeamTask not found" });
 
-    // Task 1 uses registration flow; block code submit
+    // Task 1 has no completion code; registration flow handles it
     if (!teamTask.task?.completionCode) {
-      return res.status(400).json({ error: "This task has no completion code. Use /api/team/register for Task 1." });
+      return res
+        .status(400)
+        .json({ error: "This task has no completion code. Use /api/team/register for Task 1." });
     }
 
-    const submitted = code.trim().toUpperCase();
-    const expected = (teamTask.task.completionCode ?? "").trim().toUpperCase();
+    // 3) Compare codes (case-insensitive)
+    const submitted = code.trim();
+    const expected = teamTask.task.completionCode.trim();
+    const matches = submitted.toUpperCase() === expected.toUpperCase();
 
-    if (submitted !== expected) {
-      // Return a soft FAILURE (200), so UI can show a friendly error/jiggle
+    // 4) Failure: log submission + return soft FAILURE (no DB changes)
+    if (!matches) {
+      // Optional: see if code matches a different task's completionCode (CITEXT = case-insensitive)
+      const otherTask = await prisma.task.findFirst({
+        where: { completionCode: submitted },
+        select: { id: true },
+      });
+
+      await prisma.submission.create({
+        data: {
+          teamId: team.id,
+          teamTaskId: teamTask.id,
+          providedCode: submitted,
+          result: SubmissionResultEnum.FAILURE,
+          matchedTaskId: otherTask?.id ?? null,
+        },
+      });
+
       return res.json({ result: "FAILURE" });
     }
 
-    // Success path (idempotent)
+    // 5) Success path (idempotent awarding + unlock next)
     const result = await prisma.$transaction(async (tx) => {
-      // If already completed, don't double-award
-      let updatedCurrent = await tx.teamTask.findUnique({
+      // Re-read minimal fields to decide what to do
+      let current = await tx.teamTask.findUnique({
         where: { id: teamTask.id },
-        select: { id: true, taskId: true, status: true, completedAt: true, pointsAwarded: true, hintUsed: true, order: true },
+        select: {
+          id: true,
+          taskId: true,
+          status: true,
+          completedAt: true,
+          pointsAwarded: true,
+          hintUsed: true,
+          order: true,
+        },
       });
 
-      let updatedTeam = { totalPoints: team.totalPoints };
-      let updatedNext: { id: string; taskId: string; status: string; unlockedAt: Date | null } | null = null;
+      let totals = { totalPoints: team.totalPoints };
+      let nextTask:
+        | { id: string; taskId: string; status: string; unlockedAt: Date | null }
+        | null = null;
 
-      if (updatedCurrent?.status !== "COMPLETED") {
+      if (current?.status !== "COMPLETED") {
         const base = teamTask.task?.points ?? 0;
-        const penalty = (updatedCurrent?.hintUsed ? (teamTask.task?.hintPointsPenalty ?? 0) : 0);
+        const penalty = current?.hintUsed ? teamTask.task?.hintPointsPenalty ?? 0 : 0;
         const awarded = Math.max(0, base - penalty);
 
-        updatedCurrent = await tx.teamTask.update({
+        current = await tx.teamTask.update({
           where: { id: teamTask.id },
           data: {
             status: "COMPLETED",
             completedAt: new Date(),
             pointsAwarded: awarded,
           },
-          select: { id: true, taskId: true, status: true, completedAt: true, pointsAwarded: true, hintUsed: true, order: true },
+          select: {
+            id: true,
+            taskId: true,
+            status: true,
+            completedAt: true,
+            pointsAwarded: true,
+            hintUsed: true,
+            order: true,
+          },
         });
 
-        updatedTeam = await tx.team.update({
+        const t2 = await tx.team.update({
           where: { id: team.id },
           data: { totalPoints: team.totalPoints + awarded },
           select: { totalPoints: true },
         });
+        totals = { totalPoints: t2.totalPoints };
 
-        // Unlock next by order
+        // Unlock next (by order) if locked
         const next = await tx.teamTask.findUnique({
-          where: { teamId_order: { teamId: team.id, order: (updatedCurrent.order ?? 0) + 1 } },
+          where: {
+            teamId_order: {
+              teamId: team.id,
+              order: (current.order ?? 0) + 1,
+            },
+          },
           select: { id: true, taskId: true, status: true, unlockedAt: true },
         });
+
         if (next && next.status === "LOCKED") {
-          updatedNext = await tx.teamTask.update({
+          nextTask = await tx.teamTask.update({
             where: { id: next.id },
             data: { status: "UNLOCKED", unlockedAt: new Date() },
             select: { id: true, taskId: true, status: true, unlockedAt: true },
           });
         } else if (next) {
-          updatedNext = next;
+          nextTask = next;
         }
       }
 
-      return { updatedCurrent, updatedNext, updatedTeam };
+      return { current, nextTask, totals };
     });
 
+    // 6) Log SUCCESS attempt (even if already completed)
+    await prisma.submission.create({
+      data: {
+        teamId: team.id,
+        teamTaskId: teamTask.id,
+        providedCode: submitted,
+        result: SubmissionResultEnum.SUCCESS,
+        matchedTaskId: teamTask.taskId,
+      },
+    });
+
+    // 7) Respond
     return res.json({
       result: "SUCCESS",
-      current: result.updatedCurrent,
-      next: result.updatedNext,
-      totals: { totalPoints: result.updatedTeam.totalPoints },
+      current: result.current,
+      next: result.nextTask,
+      totals: result.totals,
     });
   } catch (err) {
     console.error("POST /api/teamTasks/submit failed:", err);
     return res.status(500).json({ error: "Failed to submit code" });
   }
 });
-
 
 // Register team (Task 1) — still applies hint penalty if hint was used
 app.post("/api/team/register", async (req, res) => {
