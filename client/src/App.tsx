@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import type { SubmissionResult, TeamTask } from "./types/game";
-import { fetchTeamTasks } from "./api";
+import { fetchTeam, fetchTeamTasks } from "./api";
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
+import { SubmissionResult, TeamTask } from "./Figma/types/game";
+import { LoginScreen } from "./Figma/components/LoginScreen";
 
 export default function App() {
   const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
@@ -12,26 +13,21 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>(gameLogic.getGameState());
   
   const [selectedTeamTask, setSelectedTeamTask] = useState<TeamTask | null>(null);
-  const [currentScreen, setCurrentScreen] = useState<"tasks" | "detail">("tasks");
+  const [currentScreen, setCurrentScreen] = useState<"login" | "tasks" | "detail">("login");
   const [elapsedTime, setElapsedTime] = useState(0);
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        setLoading(true);
-        const data = await fetchTeamTasks();
-        if (alive) setTeamTasks(data);
-      } catch (e: any) {
-        if (alive) setError(e?.message || "Failed to load team tasks");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, []);
+useEffect(() => {
+  const saved = localStorage.getItem("entryCode");
+  if (!saved) {
+    setLoading(false);
+    setCurrentScreen("login");
+    return;
+  }
+
+  // silently try to login with saved code
+  handleLogin(saved);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
   
   // Subscribe to game state changes
   useEffect(() => {
@@ -93,6 +89,48 @@ export default function App() {
     setSelectedTeamTask(null);
   };
 
+const handleLogin = async (teamCode: string) => {
+  setError(null);
+  setLoading(true);
+
+  try {
+    // 1) validate team
+    const team = await fetchTeam(teamCode.trim());
+
+    // 2) load tasks for that team
+    const tasks = await fetchTeamTasks(teamCode.trim());
+
+    // 3) update client state
+    setTeamTasks(tasks);
+    setGameState((prev) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        // hydrate from API (null-safe fallbacks if your Team includes optionals)
+        id: team.id,
+        name: team.name ?? prev.team.name ?? null,
+        hasEntered: Boolean(team.hasEntered),
+        startedAt: team.startedAt ?? null,
+        finishedAt: team.finishedAt ?? null,
+        totalPoints: team.totalPoints ?? 0,
+        totalBonusPoints: team.totalBonusPoints ?? 0,
+        totalHintPenalties: team.totalHintPenalties ?? 0,
+      },
+      // NOTE: we keep prev.teamTasks as-is for now since your UI reads
+      // from the local `teamTasks` state passed to TaskGridScreen.
+    }));
+
+    localStorage.setItem("entryCode", teamCode.trim());
+    console.log("SUCCESS! MOVE TO TASKS");
+    setCurrentScreen("tasks");
+  } catch (e: any) {
+    setError(e?.message || "Login failed");
+    setCurrentScreen("login");
+  } finally {
+    setLoading(false);
+  }
+};
+
   // Show task detail screen when a task is selected
   if (currentScreen === "detail" && selectedTeamTask) {
     return (
@@ -108,9 +146,9 @@ export default function App() {
     );
   }
 
-  // Show main task grid screen
-  return (
-    <TaskGridScreen
+  // Show task detail screen when a task is selected
+  if (currentScreen === "tasks") {
+    return (<TaskGridScreen
       gameState={{
         team: {
           id: "",
@@ -128,6 +166,14 @@ export default function App() {
       isGameComplete={gameLogic.isGameComplete()}
       onTaskClick={handleTaskClick}
       formatTime={formatTime}
-    />
+    />)
+  }
+
+  // Show main task grid screen
+  return (
+      <LoginScreen 
+      onLogin={handleLogin}
+      error={error}
+      />
   );
 }
