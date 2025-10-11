@@ -404,25 +404,21 @@ const handleLogin = async (teamCode: string) => {
 
   // Show task detail screen when a task is selected
   if (currentScreen === "tasks") {
-    return (<TaskGridScreen
-      gameState={{
-        team: {
-          id: "",
-          hasEntered: false,
-          totalPoints: 0,
-          totalBonusPoints: 0,
-          totalHintPenalties: 0
-        },
-        teamTasks: teamTasks
-      }}
-      elapsedTime={elapsedTime}
-      totalPoints={totalPoints}
-      totalEarnedPoints={totalEarnedPoints}
-      progress={progress}
-      isGameComplete={gameLogic.isGameComplete()}
-      onTaskClick={handleTaskClick}
-      formatTime={formatTime}
-    />)
+    return (
+      <TaskGridScreen
+        gameState={{
+          ...gameState,
+          teamTasks,
+        }}
+        elapsedTime={elapsedTime}
+        totalPoints={totalPoints}
+        totalEarnedPoints={totalEarnedPoints}
+        progress={progress}
+        isGameComplete={gameLogic.isGameComplete()}
+        onTaskClick={handleTaskClick}
+        formatTime={formatTime}
+      />
+    );
   }
 
   // Show main task grid screen
