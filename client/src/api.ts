@@ -1,5 +1,5 @@
 // client/src/api.ts
-import type { Team, TeamTask } from "./Figma/types/game";
+import type { Team, TeamTask } from "./Figma/lib/types";
 
 /**
  * Validate a team entry code and return the Team record.

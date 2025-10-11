@@ -578,6 +578,160 @@ app.post("/api/teamTasks/bonusPhoto", async (req, res) => {
   }
 });
 
+app.get("/api/admin/teams", async (_req, res) => {
+  try {
+    const teams = await prisma.team.findMany({
+      orderBy: [{ startedAt: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        hasEntered: true,
+        startedAt: true,
+        finishedAt: true,
+        totalPoints: true,
+        totalBonusPoints: true,
+      },
+    });
+
+    // Pull tasks per team (lightweight but N+1; fine for small events)
+    const results = [];
+    for (const t of teams) {
+      const teamTasks = await prisma.teamTask.findMany({
+        where: { teamId: t.id },
+        orderBy: { order: "asc" },
+        select: {
+          order: true,
+          status: true,
+          completedAt: true,
+          task: { select: { title: true } },
+        },
+      });
+
+      const stats = {
+        total: teamTasks.length,
+        completed: teamTasks.filter(tt => tt.status === "COMPLETED").length,
+        skipped: teamTasks.filter(tt => tt.status === "SKIPPED").length,
+        unlocked: teamTasks.filter(tt => tt.status === "UNLOCKED").length,
+        locked: teamTasks.filter(tt => tt.status === "LOCKED").length,
+      };
+
+      // current task = lowest UNLOCKED, or next after last COMPLETED
+      const firstUnlocked = teamTasks.find(tt => tt.status === "UNLOCKED");
+      const lastCompletedIdx = [...teamTasks].reverse().findIndex(tt => tt.status === "COMPLETED");
+      const lastCompletedOrder = lastCompletedIdx >= 0 ? teamTasks.length - lastCompletedIdx : 0;
+      const currentTask =
+        firstUnlocked
+          ? { order: firstUnlocked.order, title: firstUnlocked.task?.title ?? null }
+          : (teamTasks[lastCompletedOrder] ? { order: teamTasks[lastCompletedOrder].order, title: teamTasks[lastCompletedOrder].task?.title ?? null } : null);
+
+      // last submission (from Submissions table)
+      const lastSub = await prisma.submission.findFirst({
+        where: { teamId: t.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      });
+
+      results.push({
+        id: t.id,
+        name: t.name,
+        hasEntered: t.hasEntered,
+        startedAt: t.startedAt,
+        finishedAt: t.finishedAt,
+        totalPoints: t.totalPoints,
+        totalBonusPoints: t.totalBonusPoints,
+        stats,
+        currentTask,
+        lastSubmissionAt: lastSub?.createdAt ?? null,
+      });
+    }
+
+    res.json(results);
+  } catch (err) {
+    console.error("GET /api/admin/teams failed:", err);
+    res.status(500).json({ error: "Failed to load admin teams" });
+  }
+});
+
+app.get("/api/admin/teams/:id", async (req, res) => {
+  const teamId = req.params.id;
+  try {
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: {
+        id: true,
+        name: true,
+        hasEntered: true,
+        startedAt: true,
+        finishedAt: true,
+        totalPoints: true,
+        totalBonusPoints: true,
+      },
+    });
+    if (!team) return res.status(404).json({ error: "Team not found" });
+
+    const teamTasks = await prisma.teamTask.findMany({
+      where: { teamId },
+      orderBy: { order: "asc" },
+      include: {
+        task: { select: { title: true, points: true, bonusPoints: true, hintPointsPenalty: true } },
+      },
+    });
+
+    // Map photoId → URL you can use directly in <img src=...>
+    const mapped = teamTasks.map(tt => ({
+      id: tt.id,
+      taskId: tt.taskId,
+      order: tt.order,
+      status: tt.status,
+      hintUsed: tt.hintUsed,
+      unlockedAt: tt.unlockedAt,
+      completedAt: tt.completedAt,
+      skippedAt: tt.skippedAt,
+      pointsAwarded: tt.pointsAwarded,
+      bonusAwarded: tt.bonusAwarded,
+      bonusPhotoId: tt.bonusPhotoId,
+      task: tt.task,
+      bonusPhoto: tt.bonusPhotoId ? { url: `/api/admin/uploads/${tt.bonusPhotoId}` } : null,
+    }));
+
+    // last submission time for this team
+    const lastSub = await prisma.submission.findFirst({
+      where: { teamId },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    });
+
+    res.json({
+      team,
+      teamTasks: mapped,
+      lastSubmissionAt: lastSub?.createdAt ?? null,
+    });
+  } catch (err) {
+    console.error("GET /api/admin/teams/:id failed:", err);
+    res.status(500).json({ error: "Failed to load team detail" });
+  }
+});
+
+app.get("/api/admin/uploads/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const upload = await prisma.upload.findUnique({
+      where: { id },
+      select: { blob: true, contentType: true, filename: true, sizeBytes: true },
+    });
+    if (!upload || !upload.blob) return res.status(404).send("Not found");
+
+    res.setHeader("Content-Type", upload.contentType || "application/octet-stream");
+    if (upload.filename) {
+      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(upload.filename)}"`);
+    }
+    res.send(upload.blob as unknown as Buffer);
+  } catch (err) {
+    console.error("GET /api/admin/uploads/:id failed:", err);
+    res.status(500).send("Error");
+  }
+});
+
 /**
  * Static client (built by Vite/React)
  * In the container, process.cwd() === /app

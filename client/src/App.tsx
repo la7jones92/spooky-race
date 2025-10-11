@@ -3,12 +3,18 @@ import { fetchTeam, fetchTeamTasks, registerTeamApi, skipTask, submitTaskCode, u
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
-import { SubmissionResult, TaskStatus, TeamTask } from "./Figma/types/game";
+import { SubmissionResult, TaskStatus, TeamTask } from "./Figma/lib/types";
 import { LoginScreen } from "./Figma/components/LoginScreen";
 import { uploadBonusPhotoBase64 } from "./api";
 import { compressImageToUnder5MB, blobToBase64Data } from "./utils/image";
+import AdminAppRouter from "./Admin/AdminAppRouter";
 
 export default function App() {
+  // Admin portal mount
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
+    return <AdminAppRouter />;
+  }
+
   const [teamTasks, setTeamTasks] = useState<TeamTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

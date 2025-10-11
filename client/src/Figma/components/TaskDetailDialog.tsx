@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { CheckCircle, Trophy } from 'lucide-react';
-import { Task } from '../types/game';
+import { Task } from '../lib/types';
 
 interface TaskDetailDialogProps {
   task: Task | null;

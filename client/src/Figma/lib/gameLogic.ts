@@ -1,4 +1,4 @@
-import { Task, Team, TeamTask, TaskStatus, SubmissionResult, Submission } from '../types/game';
+import { Task, Team, TeamTask, TaskStatus, SubmissionResult, Submission } from '../lib/types';
 
 // Mock task data (without completion codes for client)
 export const GAME_TASKS: Task[] = [

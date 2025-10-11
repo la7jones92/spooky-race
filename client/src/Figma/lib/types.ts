@@ -53,7 +53,7 @@ export interface Team {
   totalBonusPoints: number;
   totalHintPenalties: number;
 
-  // You typically won’t keep entryCode on the client after entry,
+  // You typically won't keep entryCode on the client after entry,
   // but include it if your UI needs to re-show it.
   entryCode?: string;
 }
@@ -64,7 +64,7 @@ export interface Upload {
   // Your backend will return either a URL (S3/R2) or serve a file route.
   url?: string | null;
 
-  // If you ever stream from DB, you’ll likely expose a file route instead of blob.
+  // If you ever stream from DB, you'll likely expose a file route instead of blob.
   // blob?: ArrayBuffer; // Not recommended to send raw blobs in JSON.
 
   contentType: string;
@@ -130,4 +130,10 @@ export interface AdminTaskWithStats extends AdminTask {
     unlocked: number;
     locked: number;
   };
+}
+
+// ---------- Admin Portal specific types ----------
+
+export interface AdminTeamView extends Team {
+  teamTasks: TeamTask[];
 }

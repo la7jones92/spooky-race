@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Lock } from 'lucide-react';
-import { TeamTask, TaskStatus } from '../types/game';
+import { TeamTask, TaskStatus } from '../lib/types';
 
 interface TaskCardProps {
   teamTask: TeamTask;

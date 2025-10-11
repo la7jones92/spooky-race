@@ -4,7 +4,7 @@ import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 import { Ghost, Skull, Trophy, Clock } from 'lucide-react';
 import { GameState } from '../lib/gameLogic';
-import { TeamTask } from '../types/game';
+import { TeamTask } from '../lib/types';
 
 interface TaskGridScreenProps {
   gameState: GameState;

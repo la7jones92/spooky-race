@@ -7,7 +7,7 @@ import { Textarea } from './ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle } from 'lucide-react';
-import { TeamTask, TaskStatus, SubmissionResult } from '../types/game';
+import { TeamTask, TaskStatus, SubmissionResult } from '../lib/types';
 
 interface TaskDetailScreenProps {
   teamTask: TeamTask;
