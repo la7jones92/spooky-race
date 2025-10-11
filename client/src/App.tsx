@@ -7,7 +7,7 @@ import { SubmissionResult, TaskStatus, TeamTask } from "./Figma/lib/types";
 import { LoginScreen } from "./Figma/components/LoginScreen";
 import { uploadBonusPhotoBase64 } from "./api";
 import { compressImageToUnder5MB, blobToBase64Data } from "./utils/image";
-import AdminAppRouter from "./Admin/AdminAppRouter";
+import AdminAppRouter from "./admin/AdminAppRouter";
 
 export default function App() {
   // Admin portal mount
