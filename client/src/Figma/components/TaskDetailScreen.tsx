@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -11,7 +11,7 @@ import { TeamTask, TaskStatus, SubmissionResult } from '../types/game';
 interface TaskDetailScreenProps {
   teamTask: TeamTask;
   onBack: () => void;
-  onSubmitCode: (taskId: string, code: string) => SubmissionResult;
+  onSubmitCode: (taskId: string, code: string) => Promise<SubmissionResult>;
   onRegisterTeam: (teamName: string) => void;
   onBonusSubmit: (taskId: string, file: File) => void;
   onSkip: (taskId: string) => void;
@@ -23,6 +23,8 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
   const [textCode, setTextCode] = useState('');
   const [teamName, setTeamName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const submitBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const task = teamTask.task;
   if (!task) return null;
@@ -45,19 +47,29 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
     }
   };
 
-  const handleCodeSubmit = () => {
-    if (!textCode.trim()) return;
-    
-    const result = onSubmitCode(task.id, textCode.trim());
-    
-    if (result === SubmissionResult.FAILURE) {
-      setErrorMessage('Incorrect code. Please try again or use a hint.');
-      return;
-    }
-    
-    setErrorMessage('');
-    setTextCode('');
-  };
+const handleCodeSubmit = async () => {
+  if (!textCode.trim()) return;
+
+  setSubmitting(true);
+  const result = await onSubmitCode(task.id, textCode.trim());
+  setSubmitting(false);
+
+  if (result === SubmissionResult.FAILURE) {
+    setErrorMessage('Incorrect code. Please try again or use a hint.');
+    // jiggle the submit button (same animation as Login)
+    submitBtnRef.current?.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-6px)' },
+        { transform: 'translateX(6px)' },
+        { transform: 'translateX(-4px)' },
+        { transform: 'translateX(4px)' },
+        { transform: 'translateX(0)' },
+      ],
+      { duration: 450, easing: 'ease-in-out' }
+    );
+  }
+};
 
   const handleTeamNameSubmit = () => {
     if (teamName.trim()) {
@@ -134,7 +146,7 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
             
             {/* Submission Form */}
             <div className="border-t border-border pt-6">
-              {task.id === "task-1" ? (
+              {task.order === 1 ? (
                 /* Team Name Registration */
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -209,6 +221,7 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
                   ) : (
                     <div className="space-y-3">
                       <Button 
+                        ref={submitBtnRef}
                         onClick={handleCodeSubmit}
                         disabled={!textCode.trim()}
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"

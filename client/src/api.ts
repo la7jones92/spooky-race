@@ -87,3 +87,48 @@ export async function skipTask(
   }
   return res.json();
 }
+export async function submitTaskCode(
+  entryCode: string,
+  taskId: string,
+  code: string
+): Promise<
+  | { result: "FAILURE" }
+  | {
+      result: "SUCCESS";
+      current: { taskId: string; status: string; completedAt?: string; pointsAwarded?: number; order?: number | null };
+      next?: { taskId: string; status: string; unlockedAt?: string | null };
+      totals: { totalPoints: number };
+    }
+> {
+  const res = await fetch("/api/teamTasks/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ entryCode, taskId, code }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Submit failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}
+
+export async function registerTeamApi(entryCode: string, teamName: string): Promise<{
+  result: "SUCCESS";
+  team: { name: string; hasEntered: boolean; startedAt: string | null; totalPoints: number };
+  current: { taskId: string; status: string; completedAt?: string; pointsAwarded?: number };
+  next?: { taskId: string; status: string; unlockedAt?: string | null };
+  totals: { totalPoints: number };
+}> {
+  const res = await fetch("/api/team/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({ entryCode, teamName }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Register failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}

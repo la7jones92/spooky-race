@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchTeam, fetchTeamTasks, skipTask, useHint } from "./api";
+import { fetchTeam, fetchTeamTasks, registerTeamApi, skipTask, submitTaskCode, useHint } from "./api";
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
@@ -64,13 +64,131 @@ useEffect(() => {
     setCurrentScreen("detail");
   };
 
-  const handleRegisterTeam = (teamName: string) => {
-    gameLogic.registerTeam(teamName);
-  };
+const handleRegisterTeam = async (teamName: string) => {
+  try {
+    const entryCode = localStorage.getItem("entryCode");
+    if (!entryCode) throw new Error("Not logged in");
 
-  const handleSubmitCode = (taskId: string, code: string): SubmissionResult => {
-    return gameLogic.submitTaskCode(taskId, code);
-  };
+    const resp = await registerTeamApi(entryCode, teamName);
+
+    // update list (first task complete, unlock next)
+    setTeamTasks((prev) =>
+      prev.map((tt) => {
+        if (tt.order === 1 || tt.taskId === "task-1") {
+          return {
+            ...tt,
+            status: TaskStatus.COMPLETED,
+            completedAt: resp.current.completedAt ?? new Date().toISOString(),
+            pointsAwarded: resp.current.pointsAwarded ?? tt.pointsAwarded ?? 0,
+          };
+        }
+        if (resp.next && tt.taskId === resp.next.taskId) {
+          return {
+            ...tt,
+            status: TaskStatus.UNLOCKED,
+            unlockedAt: resp.next.unlockedAt ?? new Date().toISOString(),
+          };
+        }
+        return tt;
+      })
+    );
+
+    // update open detail (if it's task 1)
+    setSelectedTeamTask((prev) =>
+      prev && (prev.order === 1 || prev.taskId === "task-1")
+        ? {
+            ...prev,
+            status: TaskStatus.COMPLETED,
+            completedAt: resp.current.completedAt ?? new Date().toISOString(),
+            pointsAwarded: resp.current.pointsAwarded ?? prev.pointsAwarded ?? 0,
+          }
+        : prev
+    );
+
+    // update team state
+    setGameState((prev) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        name: resp.team.name ?? teamName,
+        hasEntered: true,
+        startedAt: resp.team.startedAt ?? prev.team.startedAt ?? new Date().toISOString(),
+        totalPoints: resp.totals?.totalPoints ?? prev.team.totalPoints,
+      },
+    }));
+
+    // back to list
+    setSelectedTeamTask(null);
+    setCurrentScreen("tasks");
+  } catch (e: any) {
+    setError(e?.message || "Registration failed");
+  }
+};
+
+// Make onSubmitCode async → TaskDetailScreen will await it
+const handleSubmitCode = async (taskId: string, code: string): Promise<SubmissionResult> => {
+  try {
+    const entryCode = localStorage.getItem("entryCode");
+    if (!entryCode) throw new Error("Not logged in");
+
+    const resp = await submitTaskCode(entryCode, taskId, code);
+    if (resp.result === "FAILURE") {
+      return SubmissionResult.FAILURE;
+    }
+
+    // success: update list
+    setTeamTasks((prev) =>
+      prev.map((tt) => {
+        if (tt.taskId === taskId) {
+          return {
+            ...tt,
+            status: TaskStatus.COMPLETED,
+            completedAt: resp.current.completedAt ?? new Date().toISOString(),
+            pointsAwarded: resp.current.pointsAwarded ?? tt.pointsAwarded ?? 0,
+          };
+        }
+        if (resp.next && tt.taskId === resp.next.taskId) {
+          return {
+            ...tt,
+            status: TaskStatus.UNLOCKED,
+            unlockedAt: resp.next.unlockedAt ?? new Date().toISOString(),
+          };
+        }
+        return tt;
+      })
+    );
+
+    // update open detail right away
+    setSelectedTeamTask((prev) =>
+      prev && prev.taskId === taskId
+        ? {
+            ...prev,
+            status: TaskStatus.COMPLETED,
+            completedAt: resp.current.completedAt ?? new Date().toISOString(),
+            pointsAwarded: resp.current.pointsAwarded ?? prev.pointsAwarded ?? 0,
+          }
+        : prev
+    );
+
+    // totals
+    setGameState((prev) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        totalPoints: resp.totals?.totalPoints ?? prev.team.totalPoints,
+      },
+    }));
+
+    // back to list
+    setSelectedTeamTask(null);
+    setCurrentScreen("tasks");
+
+    return SubmissionResult.SUCCESS;
+  } catch (e: any) {
+    setError(e?.message || "Submit failed");
+    return SubmissionResult.FAILURE;
+  }
+};
 
   const handleBonusSubmit = (taskId: string, file: File) => {
     gameLogic.submitBonusPhoto(taskId, file);
@@ -192,6 +310,8 @@ const handleLogin = async (teamCode: string) => {
     setLoading(false);
   }
 };
+
+
 
   // Show task detail screen when a task is selected
   if (currentScreen === "detail" && selectedTeamTask) {
