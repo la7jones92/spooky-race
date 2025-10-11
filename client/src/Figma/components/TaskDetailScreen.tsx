@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Textarea } from './ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle } from 'lucide-react';
@@ -145,27 +146,21 @@ const handleCodeSubmit = async () => {
             <p className="leading-relaxed">{task.detailedDescription}</p>
             
             {/* Submission Form */}
-            <div className="border-t border-border pt-6">
+            {!isCompleted && !isSkipped && (
+              <div className="border-t border-border pt-6">
               {task.order === 1 ? (
-                /* Team Name Registration */
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="team-name">Team Name</Label>
-                    <Input
-                      id="team-name"
-                      placeholder="Enter your team name"
-                      value={teamName}
-                      onChange={(e) => setTeamName(e.target.value)}
-                      className="bg-input-background border-border"
-                      disabled={isCompleted}
-                    />
-                  </div>
-                  {isCompleted ? (
-                    <div className="flex items-center justify-center gap-2 p-3 bg-primary/10 border border-primary/30 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-primary" />
-                      <span className="text-primary">Team Registered!</span>
+                  /* Team Name Registration */
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="team-name">Team Name</Label>
+                      <Input
+                        id="team-name"
+                        placeholder="Enter your team name"
+                        value={teamName}
+                        onChange={(e) => setTeamName(e.target.value)}
+                        className="bg-input-background border-border"
+                      />
                     </div>
-                  ) : (
                     <Button 
                       onClick={handleTeamNameSubmit}
                       disabled={!teamName.trim()}
@@ -174,54 +169,40 @@ const handleCodeSubmit = async () => {
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Register Team
                     </Button>
-                  )}
-                </div>
-              ) : (
-                /* Code Submission */
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="completion-code">Completion Code</Label>
-                    <Input
-                      id="completion-code"
-                      placeholder={getSubmissionPlaceholder(task.id)}
-                      value={textCode}
-                      onChange={(e) => {
-                        setTextCode(e.target.value);
-                        if (errorMessage) setErrorMessage('');
-                      }}
-                      className={`bg-input-background border-border ${
-                        errorMessage ? 'border-destructive' : ''
-                      }`}
-                      disabled={isCompleted || isSkipped}
-                    />
-                    {errorMessage && (
-                      <p className="text-sm text-destructive flex items-center gap-1">
-                        <AlertTriangle className="w-4 h-4" />
-                        {errorMessage}
-                      </p>
-                    )}
-                    {isHintUsed && task.hint && (
-                      <div className="p-3 bg-accent/10 border border-accent/30 rounded-lg">
-                        <p className="text-sm text-accent">
-                          <strong>Hint:</strong> {task.hint}
-                        </p>
-                      </div>
-                    )}
                   </div>
-                  {isCompleted ? (
-                    <div className="flex items-center justify-center gap-2 p-3 bg-primary/10 border border-primary/30 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-primary" />
-                      <span className="text-primary">Task Completed!</span>
+                ) : (
+                  /* Code Submission */
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="completion-code">Completion Code</Label>
+                      <Input
+                        id="completion-code"
+                        placeholder={getSubmissionPlaceholder(task.id)}
+                        value={textCode}
+                        onChange={(e) => {
+                          setTextCode(e.target.value);
+                          if (errorMessage) setErrorMessage('');
+                        }}
+                        className={`bg-input-background border-border ${
+                          errorMessage ? 'border-destructive' : ''
+                        }`}
+                      />
+                      {errorMessage && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <AlertTriangle className="w-4 h-4" />
+                          {errorMessage}
+                        </p>
+                      )}
+                      {isHintUsed && task.hint && (
+                        <div className="p-3 bg-accent/10 border border-accent/30 rounded-lg">
+                          <p className="text-sm text-accent">
+                            <strong>Hint:</strong> {task.hint}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  ) : isSkipped ? (
-                    <div className="flex items-center justify-center gap-2 p-3 bg-muted/20 border border-muted rounded-lg">
-                      <SkipForward className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-muted-foreground">Task Skipped</span>
-                    </div>
-                  ) : (
                     <div className="space-y-3">
                       <Button 
-                        ref={submitBtnRef}
                         onClick={handleCodeSubmit}
                         disabled={!textCode.trim()}
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -288,10 +269,28 @@ const handleCodeSubmit = async () => {
                         </AlertDialog>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Status Display */}
+            {isCompleted && (
+              <div className="border-t border-border pt-6">
+                <div className="flex items-center justify-center gap-2 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-primary" />
+                  <span className="text-primary">Task Completed!</span>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+            {isSkipped && (
+              <div className="border-t border-border pt-6">
+                <div className="flex items-center justify-center gap-2 p-3 bg-muted/20 border border-muted rounded-lg">
+                  <SkipForward className="w-5 h-5 text-muted-foreground" />
+                  <span className="text-muted-foreground">Task Skipped</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

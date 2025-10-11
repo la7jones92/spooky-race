@@ -66,7 +66,7 @@ const totalPoints = teamTasks.reduce(
 const totalEarnedPoints =
   (gameState.team.totalPoints ?? 0) + (gameState.team.totalBonusPoints ?? 0);
 
-const completed = teamTasks.filter((tt) => tt.status === TaskStatus.COMPLETED).length;
+const completed = teamTasks.filter((tt) => [TaskStatus.COMPLETED, TaskStatus.SKIPPED].includes(tt.status)).length;
 
 const progress = {
   completed,

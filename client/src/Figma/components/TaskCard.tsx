@@ -22,9 +22,9 @@ export function TaskCard({ teamTask, onClick }: TaskCardProps) {
       case TaskStatus.LOCKED:
         return { icon: '🔒', text: 'Locked', showDescription: false };
       case TaskStatus.COMPLETED:
-        return { icon: '✅', text: 'Completed!', showDescription: true };
+        return { icon: '✅', text: 'Completed!', showDescription: false };
       case TaskStatus.SKIPPED:
-        return { icon: '🚫', text: 'Skipped!', showDescription: true };
+        return { icon: '🚫', text: 'Skipped!', showDescription: false };
       default:
         return { icon: null, text: null, showDescription: true };
     }
@@ -47,9 +47,10 @@ export function TaskCard({ teamTask, onClick }: TaskCardProps) {
       `}
       onClick={isUnlocked ? onClick : undefined}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+      <CardHeader className={isCompleted || isSkipped ? 'pb-4' : 'pb-3'}>
+        <div className="flex items-center justify-between mb-1">
           <CardTitle className="flex items-center gap-2">
+            {teamTask.status === TaskStatus.LOCKED && <Lock className="w-4 h-4 text-muted-foreground" />}
             <span className={isUnlocked ? 'text-foreground' : 'text-muted-foreground'}>
               {teamTask.status === TaskStatus.LOCKED ? `${statusDisplay.icon} Locked` : task.title}
             </span>
@@ -58,18 +59,20 @@ export function TaskCard({ teamTask, onClick }: TaskCardProps) {
             {task.points + task.bonusPoints} pts
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className={`text-sm ${isUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
-          {statusDisplay.showDescription ? task.description : ''}
-        </p>
         {(isCompleted || isSkipped) && statusDisplay.text && (
-          <div className={`mt-3 flex items-center gap-2 text-sm ${isCompleted ? 'text-primary' : 'text-muted-foreground'}`}>
+          <div className={`flex items-center gap-2 text-sm ${isCompleted ? 'text-primary' : 'text-muted-foreground'}`}>
             <span>{statusDisplay.icon}</span>
             {statusDisplay.text}
           </div>
         )}
-      </CardContent>
+      </CardHeader>
+      {statusDisplay.showDescription && (
+        <CardContent className="pt-0">
+          <p className={`text-sm ${isUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
+            {task.description}
+          </p>
+        </CardContent>
+      )}
     </Card>
   );
 }
