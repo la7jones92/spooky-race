@@ -57,9 +57,28 @@ useEffect(() => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const totalPoints = gameLogic.getTotalPossiblePoints();
-  const totalEarnedPoints = gameLogic.getCurrentEarnedPoints();
-  const progress = gameLogic.getProgress();
+// Compute from server-backed state
+const totalPoints = teamTasks.reduce(
+  (sum, tt) => sum + (tt.task?.points ?? 0) + (tt.task?.bonusPoints ?? 0),
+  0
+);
+
+const totalEarnedPoints =
+  (gameState.team.totalPoints ?? 0) + (gameState.team.totalBonusPoints ?? 0);
+
+const completed = teamTasks.filter((tt) => tt.status === TaskStatus.COMPLETED).length;
+
+const progress = {
+  completed,
+  total: teamTasks.length,
+  percentage: teamTasks.length
+    ? Math.round((completed / teamTasks.length) * 100)
+    : 0,
+};
+
+const isGameComplete =
+  !!gameState.team.finishedAt ||
+  (progress.total > 0 && progress.completed === progress.total);
 
   const handleTaskClick = (teamTask: TeamTask) => {
     setSelectedTeamTask(teamTask);
