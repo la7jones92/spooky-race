@@ -25,11 +25,11 @@ export function PhotoModal({ isOpen, onClose, photoUrl, taskTitle, completedAt }
             <p className="text-sm text-muted-foreground">Submitted at {completedAt}</p>
           )}
         </DialogHeader>
-        <div className="mt-4">
+        <div className="mt-4 max-h-[70vh] flex items-center justify-center bg-black/20 rounded-md border border-border">
           <img
             src={photoUrl}
             alt={taskTitle}
-            className="w-full h-auto rounded-md border border-border"
+            className="max-w-full max-h-[70vh] h-auto object-contain rounded-md"
           />
         </div>
       </DialogContent>
