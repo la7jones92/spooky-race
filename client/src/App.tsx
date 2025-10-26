@@ -206,10 +206,6 @@ const handleSubmitCode = async (taskId: string, code: string): Promise<Submissio
       },
     }));
 
-    // back to list
-    setSelectedTeamTask(null);
-    setCurrentScreen("tasks");
-
     return SubmissionResult.SUCCESS;
   } catch (e: any) {
     setError(e?.message || "Submit failed");
