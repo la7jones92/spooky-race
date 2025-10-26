@@ -31,7 +31,20 @@ export function TaskGridScreen({
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="relative text-center mb-4">
+          {/* Logout Button - positioned at the top right */}
+          <div className="flex justify-end mb-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onLogout}
+              className="text-muted-foreground hover:text-primary"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+          
+          <div className="text-center mb-4">
             <div className="flex items-center justify-center gap-3 mb-2">
               <Ghost className="w-8 h-8 text-primary" />
               <h1 className="text-3xl font-bold text-primary">
@@ -42,16 +55,6 @@ export function TaskGridScreen({
             <p className="text-muted-foreground">
               {gameState.team.name ? `Team: ${gameState.team.name}` : "Register your team to begin!"}
             </p>
-            {/* Logout Button - positioned absolutely in top right */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onLogout}
-              className="absolute top-0 right-0 text-muted-foreground hover:text-primary"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
           </div>
 
           {/* Progress Section */}
