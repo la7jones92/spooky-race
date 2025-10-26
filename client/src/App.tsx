@@ -387,7 +387,21 @@ const handleLogin = async (teamCode: string) => {
   }
 };
 
+const handleLogout = () => {
+  setError(null);
+  setLoading(true);
 
+  try {
+    localStorage.removeItem("entryCode");
+    console.log("SUCCESS! MOVE TO TASKS");
+    setCurrentScreen("login");
+  } catch (e: any) {
+    setError(e?.message || "Login failed");
+    setCurrentScreen("login");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Show task detail screen when a task is selected
   if (currentScreen === "detail" && selectedTeamTask) {
@@ -412,14 +426,13 @@ const handleLogin = async (teamCode: string) => {
           ...gameState,
           teamTasks,
         }}
-        elapsedTime={elapsedTime}
         totalPoints={totalPoints}
         totalEarnedPoints={totalEarnedPoints}
         progress={progress}
         isGameComplete={gameLogic.isGameComplete()}
-        onTaskClick={handleTaskClick}
-        formatTime={formatTime}
-      />
+        onTaskClick={handleTaskClick} 
+        onLogout={handleLogout}     
+        />
     );
   }
 
