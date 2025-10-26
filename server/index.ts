@@ -590,6 +590,7 @@ app.get("/api/admin/teams", async (_req, res) => {
         finishedAt: true,
         totalPoints: true,
         totalBonusPoints: true,
+        totalHintPenalties: true,
       },
     });
 
@@ -639,6 +640,7 @@ app.get("/api/admin/teams", async (_req, res) => {
         finishedAt: t.finishedAt,
         totalPoints: t.totalPoints,
         totalBonusPoints: t.totalBonusPoints,
+        totalHintPenalties: t.totalHintPenalties,
         stats,
         currentTask,
         lastSubmissionAt: lastSub?.createdAt ?? null,
@@ -665,6 +667,7 @@ app.get("/api/admin/teams/:id", async (req, res) => {
         finishedAt: true,
         totalPoints: true,
         totalBonusPoints: true,
+        totalHintPenalties: true,
       },
     });
     if (!team) return res.status(404).json({ error: "Team not found" });
