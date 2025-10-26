@@ -87,7 +87,7 @@ export function TaskItem({ teamTask }: TaskItemProps) {
                 <img
                   src={teamTask.bonusPhoto.url}
                   alt={task.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                   <ImageIcon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
