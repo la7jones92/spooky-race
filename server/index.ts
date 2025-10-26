@@ -57,7 +57,7 @@ app.get("/api/teamTasks", async (req, res) => {
             bonusPhotoDescription: true,
             points: true,
             bonusPoints: true,
-            // hint: true,
+            hint: true,
             hintPointsPenalty: true,
             order: true,
             createdAt: true,
