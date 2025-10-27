@@ -283,7 +283,7 @@ app.post("/api/teamTasks/submit", async (req, res) => {
     // 3) Compare codes (case-insensitive)
     const submitted = code.trim();
     const expected = teamTask.task.completionCode.trim();
-    const matches = expected.toUpperCase().contains(submitted.toUpperCase());
+    const matches = expected.toUpperCase().includes(submitted.toUpperCase());
 
     // 4) Failure: log submission + return soft FAILURE (no DB changes)
     if (!matches) {
