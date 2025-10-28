@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { CheckCircle, Lock, Image as ImageIcon, Award } from "lucide-react";
+import { CheckCircle, Lock, Image as ImageIcon } from "lucide-react";
 import { TeamTask, TaskStatus } from "../../lib/types";
 import { useState } from "react";
 import { PhotoModal } from "./PhotoModal";
@@ -19,8 +19,6 @@ export function TaskItem({ teamTask }: TaskItemProps) {
   
   const task = teamTask.task;
   if (!task) return null;
-
-  const totalPoints = teamTask.pointsAwarded + teamTask.bonusAwarded;
 
   const getStatusBadge = () => {
     if (isCompleted) {
@@ -50,13 +48,7 @@ export function TaskItem({ teamTask }: TaskItemProps) {
           {isCompleted && teamTask.completedAt && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle className="h-4 w-4 text-primary" />
-              <span>Submitted at {formatTime(teamTask.completedAt)} • +{totalPoints} pts</span>
-              {teamTask.bonusAwarded > 0 && (
-                <>
-                  <Award className="h-4 w-4 text-accent ml-2" />
-                  <span className="text-accent">+{teamTask.bonusAwarded} bonus</span>
-                </>
-              )}
+              <span>Submitted at {formatTime(teamTask.completedAt)}</span>
             </div>
           )}
           {isSkipped && teamTask.skippedAt && (
@@ -67,10 +59,7 @@ export function TaskItem({ teamTask }: TaskItemProps) {
           {isLocked && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Lock className="h-4 w-4" />
-              <span>{task.points} points available</span>
-              {task.bonusPoints > 0 && (
-                <span className="text-accent">• +{task.bonusPoints} bonus possible</span>
-              )}
+              <span>Task not yet unlocked</span>
             </div>
           )}
         </CardHeader>
@@ -96,7 +85,7 @@ export function TaskItem({ teamTask }: TaskItemProps) {
             )}
             {teamTask.hintUsed && (
               <div className="text-sm text-muted-foreground">
-                💡 Hint used (-{task.hintPointsPenalty} pts)
+                💡 Hint used
               </div>
             )}
           </CardContent>
@@ -104,7 +93,7 @@ export function TaskItem({ teamTask }: TaskItemProps) {
         {isUnlocked && (
           <CardContent>
             <div className="text-sm text-muted-foreground">
-              {task.points} points available • {task.bonusPoints > 0 && `+${task.bonusPoints} bonus possible • `}Currently in progress
+              Currently in progress
             </div>
           </CardContent>
         )}
