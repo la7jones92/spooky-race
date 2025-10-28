@@ -143,10 +143,6 @@ const handleRegisterTeam = async (teamName: string) => {
         totalPoints: resp.totals?.totalPoints ?? prev.team.totalPoints,
       },
     }));
-
-    // back to list
-    setSelectedTeamTask(null);
-    setCurrentScreen("tasks");
   } catch (e: any) {
     setError(e?.message || "Registration failed");
   }
