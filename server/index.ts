@@ -679,7 +679,7 @@ app.get("/api/admin/teams/:id", async (req, res) => {
       where: { teamId },
       orderBy: { order: "asc" },
       include: {
-        task: { select: { title: true, description: true, points: true, bonusPoints: true, hintPointsPenalty: true } },
+        task: { select: { title: true } },
         submissions: {
           select: {
             id: true,
@@ -695,16 +695,11 @@ app.get("/api/admin/teams/:id", async (req, res) => {
     // Map photoId → URL you can use directly in <img src=...>
     const mapped = teamTasks.map(tt => ({
       id: tt.id,
-      taskId: tt.taskId,
       order: tt.order,
       status: tt.status,
       hintUsed: tt.hintUsed,
-      unlockedAt: tt.unlockedAt,
       completedAt: tt.completedAt,
       skippedAt: tt.skippedAt,
-      pointsAwarded: tt.pointsAwarded,
-      bonusAwarded: tt.bonusAwarded,
-      bonusPhotoId: tt.bonusPhotoId,
       task: tt.task,
       bonusPhoto: tt.bonusPhotoId ? { url: `/api/admin/uploads/${tt.bonusPhotoId}` } : null,
       submissions: tt.submissions,

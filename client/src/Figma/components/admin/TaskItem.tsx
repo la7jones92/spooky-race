@@ -65,9 +65,6 @@ export function TaskItem({ teamTask }: TaskItemProps) {
         </CardHeader>
         {isCompleted && (
           <CardContent className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              {task.description}
-            </div>
             {teamTask.submissions && teamTask.submissions.length > 0 && (
               <div className="space-y-2">
                 <div className="text-sm">Submitted Code:</div>
