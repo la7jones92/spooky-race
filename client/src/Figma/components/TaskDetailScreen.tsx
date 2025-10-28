@@ -120,14 +120,6 @@ const handleCodeSubmit = async () => {
             <div className="flex-1">
               <h1 className="text-xl font-semibold text-foreground">{task.title}</h1>
             </div>
-            <div className="flex gap-2">
-              <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
-                {task.points} pts
-              </Badge>
-              <Badge variant="outline" className="border-accent/30 text-accent">
-                +{task.bonusPoints} bonus
-              </Badge>
-            </div>
           </div>
         </div>
       </div>
@@ -228,7 +220,7 @@ const handleCodeSubmit = async () => {
                                   Use Hint?
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Using a hint will cost you {task.hintPointsPenalty || 5} points. Your final score for this task will be reduced from {task.points} to {task.points - (task.hintPointsPenalty || 5)} points.
+                                  Using a hint will be noted in your submission. Your team leader will be aware that you used assistance for this task.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -256,7 +248,7 @@ const handleCodeSubmit = async () => {
                                 Skip Task?
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Skipping this task means you won't earn any points for it ({task.points} + {task.bonusPoints} points lost). You'll be able to continue to the next task, but this one will be marked as skipped.
+                                Skipping this task means it will be marked as incomplete. You'll be able to continue to the next task, but this one will be marked as skipped.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -305,7 +297,7 @@ const handleCodeSubmit = async () => {
               isCompleted ? "text-accent" : "text-muted-foreground"
             }`}>
               <Camera className="w-5 h-5" />
-              Bonus Photo Challenge (+{task.bonusPoints} points)
+              Bonus Photo Challenge
             </CardTitle>
             <CardDescription className={isCompleted ? "" : "text-muted-foreground/70"}>
               {task.bonusPhotoDescription}

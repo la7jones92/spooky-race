@@ -9,8 +9,6 @@ import { TeamTask } from '../lib/types';
 
 interface TaskGridScreenProps {
   gameState: GameState;
-  totalPoints: number;
-  totalEarnedPoints: number;
   progress: { completed: number; total: number; percentage: number };
   isGameComplete: boolean;
   onTaskClick: (teamTask: TeamTask) => void;
@@ -19,8 +17,6 @@ interface TaskGridScreenProps {
 
 export function TaskGridScreen({
   gameState,
-  totalPoints,
-  totalEarnedPoints,
   progress,
   isGameComplete,
   onTaskClick,
@@ -61,20 +57,12 @@ export function TaskGridScreen({
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm">Progress</span>
-              <div className="flex items-center gap-4">
-                <Badge
-                  variant="outline"
-                  className="border-primary/30 text-primary"
-                >
-                  {progress.completed}/{progress.total} tasks
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="border-primary/30 text-primary"
-                >
-                  {totalEarnedPoints}/{totalPoints} pts
-                </Badge>
-              </div>
+              <Badge
+                variant="outline"
+                className="border-primary/30 text-primary"
+              >
+                {progress.completed}/{progress.total} tasks
+              </Badge>
             </div>
             <Progress value={progress.percentage} className="h-3" />
           </div>
@@ -104,8 +92,7 @@ export function TaskGridScreen({
               <Trophy className="w-6 h-6 text-primary" />
             </div>
             <p className="text-muted-foreground">
-              You've completed all the spooky challenges and
-              earned {totalEarnedPoints} points! 🎃👻
+              You've completed all the spooky challenges! 🎃👻
             </p>
           </div>
         )}

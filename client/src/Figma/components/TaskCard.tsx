@@ -48,17 +48,12 @@ export function TaskCard({ teamTask, onClick }: TaskCardProps) {
       onClick={isUnlocked ? onClick : undefined}
     >
       <CardHeader className={isCompleted || isSkipped ? 'pb-4' : 'pb-3'}>
-        <div className="flex items-center justify-between mb-1">
-          <CardTitle className="flex items-center gap-2">
-            {teamTask.status === TaskStatus.LOCKED && <Lock className="w-4 h-4 text-muted-foreground" />}
-            <span className={isUnlocked ? 'text-foreground' : 'text-muted-foreground'}>
-              {teamTask.status === TaskStatus.LOCKED ? `${statusDisplay.icon} Locked` : task.title}
-            </span>
-          </CardTitle>
-          <Badge variant={isCompleted ? 'default' : 'secondary'} className="bg-primary/20 text-primary border-primary/30">
-            {task.points + task.bonusPoints} pts
-          </Badge>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          {teamTask.status === TaskStatus.LOCKED && <Lock className="w-4 h-4 text-muted-foreground" />}
+          <span className={isUnlocked ? 'text-foreground' : 'text-muted-foreground'}>
+            {teamTask.status === TaskStatus.LOCKED ? `${statusDisplay.icon} Locked` : task.title}
+          </span>
+        </CardTitle>
         {(isCompleted || isSkipped) && statusDisplay.text && (
           <div className={`flex items-center gap-2 text-sm ${isCompleted ? 'text-primary' : 'text-muted-foreground'}`}>
             <span>{statusDisplay.icon}</span>

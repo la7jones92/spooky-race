@@ -64,14 +64,6 @@ useEffect(() => {
   };
 
 // Compute from server-backed state
-const totalPoints = teamTasks.reduce(
-  (sum, tt) => sum + (tt.task?.points ?? 0) + (tt.task?.bonusPoints ?? 0),
-  0
-);
-
-const totalEarnedPoints =
-  (gameState.team.totalPoints ?? 0) + (gameState.team.totalBonusPoints ?? 0);
-
 const completed = teamTasks.filter((tt) => [TaskStatus.COMPLETED, TaskStatus.SKIPPED].includes(tt.status)).length;
 
 const progress = {
@@ -423,8 +415,6 @@ const handleLogout = () => {
           ...gameState,
           teamTasks,
         }}
-        totalPoints={totalPoints}
-        totalEarnedPoints={totalEarnedPoints}
         progress={progress}
         isGameComplete={gameLogic.isGameComplete()}
         onTaskClick={handleTaskClick} 
