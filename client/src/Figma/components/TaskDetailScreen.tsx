@@ -143,7 +143,7 @@ const handleCodeSubmit = async () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="leading-relaxed">{task.detailedDescription}</p>
+            <p className="leading-relaxed whitespace-pre-line">{task.detailedDescription}</p>
             
             {/* Submission Form */}
             {!isCompleted && !isSkipped && (

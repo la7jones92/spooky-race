@@ -68,7 +68,7 @@ export function TaskCard({ teamTask, onClick }: TaskCardProps) {
       </CardHeader>
       {statusDisplay.showDescription && (
         <CardContent className="pt-0">
-          <p className={`text-sm ${isUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
+          <p className={`text-sm whitespace-pre-line ${isUnlocked ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
             {task.description}
           </p>
         </CardContent>
