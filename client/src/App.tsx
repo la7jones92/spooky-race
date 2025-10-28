@@ -384,19 +384,20 @@ const handleLogin = async (teamCode: string) => {
 };
 
 const handleLogout = () => {
+  // Clear localStorage
+  localStorage.removeItem("entryCode");
+  
+  // Clear component state
+  setTeamTasks([]);
+  setSelectedTeamTask(null);
   setError(null);
-  setLoading(true);
-
-  try {
-    localStorage.removeItem("entryCode");
-    console.log("SUCCESS! MOVE TO TASKS");
-    setCurrentScreen("login");
-  } catch (e: any) {
-    setError(e?.message || "Login failed");
-    setCurrentScreen("login");
-  } finally {
-    setLoading(false);
-  }
+  setElapsedTime(0);
+  
+  // Navigate to login
+  setCurrentScreen("login");
+  setLoading(false);
+  
+  console.log("Logged out successfully");
 };
 
   // Show task detail screen when a task is selected
