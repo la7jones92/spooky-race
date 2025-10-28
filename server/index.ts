@@ -69,7 +69,13 @@ app.get("/api/teamTasks", async (req, res) => {
       },
     });
 
-    res.json(teamTasks);
+    // Map photoId → URL
+    const mapped = teamTasks.map(tt => ({
+      ...tt,
+      bonusPhoto: tt.bonusPhotoId ? { url: `/api/uploads/${tt.bonusPhotoId}` } : null,
+    }));
+
+    res.json(mapped);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch team tasks" });
@@ -723,6 +729,28 @@ app.get("/api/admin/teams/:id", async (req, res) => {
   }
 });
 
+// Public uploads endpoint for players to view their own bonus photos
+app.get("/api/uploads/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const upload = await prisma.upload.findUnique({
+      where: { id },
+      select: { blob: true, contentType: true, filename: true, sizeBytes: true },
+    });
+    if (!upload || !upload.blob) return res.status(404).send("Not found");
+
+    res.setHeader("Content-Type", upload.contentType || "application/octet-stream");
+    if (upload.filename) {
+      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(upload.filename)}"`);
+    }
+    res.send(upload.blob as unknown as Buffer);
+  } catch (err) {
+    console.error("GET /api/uploads/:id failed:", err);
+    res.status(500).send("Error");
+  }
+});
+
+// Admin uploads endpoint (legacy, kept for compatibility)
 app.get("/api/admin/uploads/:id", async (req, res) => {
   const id = req.params.id;
   try {

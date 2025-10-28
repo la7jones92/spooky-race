@@ -308,44 +308,55 @@ const handleCodeSubmit = async () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="bonus-photo" className={isCompleted ? "" : "text-muted-foreground"}>
-                  Upload Bonus Photo
-                </Label>
-                <Input
-                  id="bonus-photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className={`bg-input-background border-border ${
-                    !isCompleted ? "cursor-not-allowed opacity-50" : ""
-                  }`}
-                  disabled={!isCompleted || isBonusCompleted}
-                />
-                {selectedFile && isCompleted && !isBonusCompleted && (
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {selectedFile.name}
-                  </p>
-                )}
-              </div>
-              {isBonusCompleted ? (
-                <div className="flex items-center justify-center gap-2 p-3 bg-accent/10 border border-accent/30 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-accent" />
-                  <span className="text-accent">Bonus Photo Submitted!</span>
+              {isBonusCompleted && teamTask.bonusPhoto ? (
+                <div className="space-y-4">
+                  <div className="relative rounded-lg overflow-hidden border border-accent/30">
+                    <img 
+                      src={teamTask.bonusPhoto.url || ''} 
+                      alt="Bonus photo" 
+                      className="w-full h-auto max-h-96 object-contain bg-black/5"
+                    />
+                  </div>
+                  <div className="flex items-center justify-center gap-2 p-3 bg-accent/10 border border-accent/30 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-accent" />
+                    <span className="text-accent">Bonus Photo Submitted!</span>
+                  </div>
                 </div>
               ) : (
-                <Button 
-                  onClick={handleBonusPhotoSubmit}
-                  disabled={!isCompleted || !selectedFile}
-                  className={`w-full ${
-                    isCompleted 
-                      ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
-                      : "bg-muted text-muted-foreground cursor-not-allowed"
-                  }`}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Submit Bonus Photo
-                </Button>
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="bonus-photo" className={isCompleted ? "" : "text-muted-foreground"}>
+                      Upload Bonus Photo
+                    </Label>
+                    <Input
+                      id="bonus-photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className={`bg-input-background border-border ${
+                        !isCompleted ? "cursor-not-allowed opacity-50" : ""
+                      }`}
+                      disabled={!isCompleted || isBonusCompleted}
+                    />
+                    {selectedFile && isCompleted && !isBonusCompleted && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected: {selectedFile.name}
+                      </p>
+                    )}
+                  </div>
+                  <Button 
+                    onClick={handleBonusPhotoSubmit}
+                    disabled={!isCompleted || !selectedFile}
+                    className={`w-full ${
+                      isCompleted 
+                        ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    }`}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Submit Bonus Photo
+                  </Button>
+                </>
               )}
             </div>
           </CardContent>
