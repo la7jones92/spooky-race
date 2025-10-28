@@ -585,6 +585,7 @@ app.get("/api/admin/teams", async (_req, res) => {
       select: {
         id: true,
         name: true,
+        entryCode: true,
         hasEntered: true,
         startedAt: true,
         finishedAt: true,
@@ -635,6 +636,7 @@ app.get("/api/admin/teams", async (_req, res) => {
       results.push({
         id: t.id,
         name: t.name,
+        entryCode: t.entryCode,
         hasEntered: t.hasEntered,
         startedAt: t.startedAt,
         finishedAt: t.finishedAt,
@@ -662,6 +664,7 @@ app.get("/api/admin/teams/:id", async (req, res) => {
       select: {
         id: true,
         name: true,
+        entryCode: true,
         hasEntered: true,
         startedAt: true,
         finishedAt: true,
