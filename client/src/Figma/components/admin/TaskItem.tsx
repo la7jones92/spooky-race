@@ -73,8 +73,8 @@ export function TaskItem({ teamTask }: TaskItemProps) {
                     key={submission.id} 
                     className={`px-3 py-2 rounded-md border ${
                       submission.result === 'SUCCESS' 
-                        ? 'border-primary/30 bg-primary/5' 
-                        : 'border-destructive/30 bg-destructive/5'
+                        ? 'border-primary/30 bg-primary/10' 
+                        : 'border-destructive/30 bg-destructive/10'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-3">
