@@ -157,3 +157,25 @@ export async function uploadBonusPhotoBase64(params: {
   }
   return res.json();
 }
+
+export async function deleteBonusPhoto(
+  entryCode: string,
+  taskId: string
+): Promise<{
+  teamTask: { taskId: string; bonusAwarded: number; bonusPhotoId: string | null };
+  totals: { totalBonusPoints: number };
+}> {
+  const res = await fetch(
+    `/api/teamTasks/${encodeURIComponent(taskId)}/bonusPhoto?entryCode=${encodeURIComponent(entryCode)}`,
+    {
+      method: "DELETE",
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Delete bonus photo failed (${res.status}): ${text}`);
+  }
+  return res.json();
+}

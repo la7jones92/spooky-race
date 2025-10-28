@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowLeft, ArrowRight, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle, X } from 'lucide-react';
 import { TeamTask, TaskStatus, SubmissionResult } from '../lib/types';
 
 interface TaskDetailScreenProps {
@@ -15,13 +15,14 @@ interface TaskDetailScreenProps {
   onSubmitCode: (taskId: string, code: string) => Promise<SubmissionResult>;
   onRegisterTeam: (teamName: string) => void;
   onBonusSubmit: (taskId: string, file: File) => void;
+  onBonusDelete: (taskId: string) => void;
   onSkip: (taskId: string) => void;
   onHintUse: (taskId: string) => void;
   onNextTask: () => void;
   hasNextTask: boolean;
 }
 
-export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onSkip, onHintUse, onNextTask, hasNextTask }: TaskDetailScreenProps) {
+export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onBonusDelete, onSkip, onHintUse, onNextTask, hasNextTask }: TaskDetailScreenProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [textCode, setTextCode] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -317,9 +318,44 @@ const handleCodeSubmit = async () => {
                       className="w-full h-auto max-h-96 object-contain bg-black/5"
                     />
                   </div>
-                  <div className="flex items-center justify-center gap-2 p-3 bg-accent/10 border border-accent/30 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-accent" />
-                    <span className="text-accent">Bonus Photo Submitted!</span>
+                  <div className="flex items-center justify-between gap-2 p-3 bg-accent/10 border border-accent/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-accent" />
+                      <span className="text-accent">Bonus Photo Submitted!</span>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-card border-border">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-foreground">Delete Bonus Photo?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-muted-foreground">
+                            Are you sure you want to delete this bonus photo? You'll be able to upload a different one after deletion.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-muted text-muted-foreground hover:bg-muted/80">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => {
+                              onBonusDelete(task.id);
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete Photo
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               ) : (

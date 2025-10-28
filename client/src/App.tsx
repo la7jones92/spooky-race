@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchTeam, fetchTeamTasks, registerTeamApi, skipTask, submitTaskCode, useHint } from "./api";
+import { fetchTeam, fetchTeamTasks, registerTeamApi, skipTask, submitTaskCode, useHint, deleteBonusPhoto } from "./api";
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
@@ -228,6 +228,9 @@ const handleBonusSubmit = async (taskId: string, file: File) => {
               ...tt,
               bonusAwarded: resp.teamTask.bonusAwarded ?? 0,
               bonusPhotoId: resp.teamTask.bonusPhotoId ?? null,
+              bonusPhoto: resp.teamTask.bonusPhotoId 
+                ? { url: `/api/uploads/${resp.teamTask.bonusPhotoId}` }
+                : null,
             }
           : tt
       )
@@ -240,6 +243,9 @@ const handleBonusSubmit = async (taskId: string, file: File) => {
             ...prev,
             bonusAwarded: resp.teamTask.bonusAwarded ?? 0,
             bonusPhotoId: resp.teamTask.bonusPhotoId ?? null,
+            bonusPhoto: resp.teamTask.bonusPhotoId 
+              ? { url: `/api/uploads/${resp.teamTask.bonusPhotoId}` }
+              : null,
           }
         : prev
     );
@@ -255,6 +261,53 @@ const handleBonusSubmit = async (taskId: string, file: File) => {
     }));
   } catch (e: any) {
     setError(e?.message || "Bonus upload failed");
+  }
+};
+
+const handleBonusDelete = async (taskId: string) => {
+  try {
+    const entryCode = localStorage.getItem("entryCode");
+    if (!entryCode) throw new Error("Not logged in");
+
+    const resp = await deleteBonusPhoto(entryCode, taskId);
+
+    // 1) update list - remove photo reference
+    setTeamTasks((prev) =>
+      prev.map((tt) =>
+        tt.taskId === taskId
+          ? {
+              ...tt,
+              bonusAwarded: 0,
+              bonusPhotoId: null,
+              bonusPhoto: null,
+            }
+          : tt
+      )
+    );
+
+    // 2) update open detail
+    setSelectedTeamTask((prev) =>
+      prev && prev.taskId === taskId
+        ? {
+            ...prev,
+            bonusAwarded: 0,
+            bonusPhotoId: null,
+            bonusPhoto: null,
+          }
+        : prev
+    );
+
+    // 3) update totals
+    setGameState((prev) => ({
+      ...prev,
+      team: {
+        ...prev.team,
+        totalBonusPoints:
+          resp.totals?.totalBonusPoints ?? prev.team.totalBonusPoints,
+      },
+    }));
+  } catch (e: any) {
+    setError(e?.message || "Bonus delete failed");
   }
 };
 
@@ -419,6 +472,7 @@ const handleLogout = () => {
         onSubmitCode={handleSubmitCode}
         onRegisterTeam={handleRegisterTeam}
         onBonusSubmit={handleBonusSubmit}
+        onBonusDelete={handleBonusDelete}
         onSkip={handleTaskSkip}
         onHintUse={handleHintUse}
         onNextTask={handleNextTask}

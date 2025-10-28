@@ -584,6 +584,82 @@ app.post("/api/teamTasks/bonusPhoto", async (req, res) => {
   }
 });
 
+// DELETE /api/teamTasks/:taskId/bonusPhoto?entryCode=GHO5T
+app.delete("/api/teamTasks/:taskId/bonusPhoto", async (req, res) => {
+  const entryCode = (req.query.entryCode as string | undefined)?.trim();
+  const taskId = req.params.taskId;
+
+  if (!entryCode) {
+    return res.status(400).json({ error: "Missing entryCode" });
+  }
+  if (!taskId) {
+    return res.status(400).json({ error: "Missing taskId" });
+  }
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const team = await tx.team.findUnique({
+        where: { entryCode },
+        select: { id: true, totalBonusPoints: true },
+      });
+
+      if (!team) {
+        throw new Error("Team not found");
+      }
+
+      const tt = await tx.teamTask.findFirst({
+        where: { teamId: team.id, taskId },
+        include: { task: { select: { bonusPoints: true } } },
+      });
+
+      if (!tt) {
+        throw new Error("TeamTask not found");
+      }
+
+      if (!tt.bonusPhotoId) {
+        throw new Error("No bonus photo to delete");
+      }
+
+      // Delete the upload record
+      await tx.upload.delete({
+        where: { id: tt.bonusPhotoId },
+      });
+
+      // Remove photo reference and deduct bonus points if awarded
+      const bonusDeduction = tt.bonusAwarded ?? 0;
+      const updatedTT = await tx.teamTask.update({
+        where: { id: tt.id },
+        data: {
+          bonusPhotoId: null,
+          bonusAwarded: 0,
+        },
+        select: { id: true, taskId: true, bonusAwarded: true, bonusPhotoId: true },
+      });
+
+      // Deduct bonus points from team total
+      let updatedTeam = { totalBonusPoints: team.totalBonusPoints };
+      if (bonusDeduction > 0) {
+        const t2 = await tx.team.update({
+          where: { id: team.id },
+          data: { totalBonusPoints: Math.max(0, team.totalBonusPoints - bonusDeduction) },
+          select: { totalBonusPoints: true },
+        });
+        updatedTeam = { totalBonusPoints: t2.totalBonusPoints };
+      }
+
+      return { updatedTT, updatedTeam };
+    });
+
+    return res.json({
+      teamTask: result.updatedTT,
+      totals: { totalBonusPoints: result.updatedTeam.totalBonusPoints },
+    });
+  } catch (err) {
+    console.error("DELETE /api/teamTasks/bonusPhoto failed:", err);
+    return res.status(500).json({ error: "Failed to delete bonus photo" });
+  }
+});
+
 app.get("/api/admin/teams", async (_req, res) => {
   try {
     const teams = await prisma.team.findMany({
