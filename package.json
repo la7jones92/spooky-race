@@ -19,6 +19,7 @@
     "dev": "ts-node server/index.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "db:seed": "ts-node prisma/seed-teams.ts"
+    "db:seed": "ts-node prisma/seed-teams.ts",
+    "reset-teams": "ts-node prisma/reset-teams.ts"
   }
 }
