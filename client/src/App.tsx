@@ -358,9 +358,9 @@ const handleLogin = async (teamCode: string) => {
       ...prev,
       team: {
         ...prev.team,
-        // hydrate from API (null-safe fallbacks if your Team includes optionals)
+        // hydrate from API (use fresh data from server, don't fall back to prev)
         id: team.id,
-        name: team.name ?? prev.team.name ?? null,
+        name: team.name ?? null,
         hasEntered: Boolean(team.hasEntered),
         startedAt: team.startedAt ?? null,
         finishedAt: team.finishedAt ?? null,
