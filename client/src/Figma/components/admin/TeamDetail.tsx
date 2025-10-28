@@ -4,7 +4,7 @@ import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { ChevronLeft } from "lucide-react";
 import { TaskItem } from "./TaskItem";
-import { getCompletedTasksCount, formatTime, getTeamStatus, getLastSubmissionTime, calculateTotalPoints } from "../../lib/helpers";
+import { getCompletedTasksCount, formatTime, getTeamStatus, getLastSubmissionTime } from "../../lib/helpers";
 
 interface TeamDetailProps {
   team: AdminTeamView;
@@ -16,7 +16,6 @@ export function TeamDetail({ team, onBack }: TeamDetailProps) {
   const totalTasks = team.teamTasks.length;
   const progressPercentage = (completedCount / totalTasks) * 100;
   const status = getTeamStatus(team);
-  const totalPoints = calculateTotalPoints(team);
   const lastSubmission = getLastSubmissionTime(team);
 
   return (
@@ -30,13 +29,10 @@ export function TeamDetail({ team, onBack }: TeamDetailProps) {
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1>{team.name || 'Unnamed Team'} {team.entryCode && `(${team.entryCode})`} — Progress Overview</h1>
+                <h1>{team.name || 'Unnamed Team'}{team.entryCode ? ` (${team.entryCode})` : ''} — Progress Overview</h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge className="bg-primary/20 text-primary border-primary/30">
-                {totalPoints} pts
-              </Badge>
               <Badge variant="outline" className="border-primary/30 text-primary">
                 {completedCount}/{totalTasks} completed
               </Badge>
@@ -62,12 +58,6 @@ export function TeamDetail({ team, onBack }: TeamDetailProps) {
             <span>
               Status: {status === 'finished' ? '✅ Finished' : '🕸 In progress'}
             </span>
-            {team.totalBonusPoints > 0 && (
-              <>
-                <span>•</span>
-                <span className="text-accent">🎁 {team.totalBonusPoints} bonus pts</span>
-              </>
-            )}
           </div>
         </div>
 
