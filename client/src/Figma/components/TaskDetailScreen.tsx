@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowLeft, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle } from 'lucide-react';
 import { TeamTask, TaskStatus, SubmissionResult } from '../lib/types';
 
 interface TaskDetailScreenProps {
@@ -17,9 +17,11 @@ interface TaskDetailScreenProps {
   onBonusSubmit: (taskId: string, file: File) => void;
   onSkip: (taskId: string) => void;
   onHintUse: (taskId: string) => void;
+  onNextTask: () => void;
+  hasNextTask: boolean;
 }
 
-export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onSkip, onHintUse }: TaskDetailScreenProps) {
+export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onSkip, onHintUse, onNextTask, hasNextTask }: TaskDetailScreenProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [textCode, setTextCode] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -34,6 +36,7 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
   const isBonusCompleted = teamTask.bonusAwarded > 0;
   const isSkipped = teamTask.status === TaskStatus.SKIPPED;
   const isHintUsed = teamTask.hintUsed;
+  const canProceedToNext = isCompleted || isSkipped;
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -348,7 +351,25 @@ const handleCodeSubmit = async () => {
           </CardContent>
         </Card>
 
-
+        {/* Next Task Button */}
+        {hasNextTask && (
+          <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-4 -mb-6">
+            <div className="max-w-4xl mx-auto">
+              <Button
+                onClick={onNextTask}
+                disabled={!canProceedToNext}
+                className={`w-full ${
+                  canProceedToNext
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                }`}
+              >
+                Next Task
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

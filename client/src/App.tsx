@@ -333,6 +333,22 @@ const handleHintUse = async (taskId: string) => {
     setSelectedTeamTask(null);
   };
 
+  const handleNextTask = () => {
+    if (!selectedTeamTask) return;
+    
+    // Find the next task in order
+    const currentOrder = selectedTeamTask.order;
+    const nextTask = teamTasks.find(tt => tt.order === currentOrder + 1);
+    
+    if (nextTask) {
+      setSelectedTeamTask(nextTask);
+      setCurrentScreen("detail");
+    } else {
+      // No next task, go back to grid
+      handleBackToTasks();
+    }
+  };
+
 const handleLogin = async (teamCode: string) => {
   setError(null);
   setLoading(true);
@@ -394,6 +410,8 @@ const handleLogout = () => {
 
   // Show task detail screen when a task is selected
   if (currentScreen === "detail" && selectedTeamTask) {
+    const hasNextTask = teamTasks.some(tt => tt.order === selectedTeamTask.order + 1);
+    
     return (
       <TaskDetailScreen
         teamTask={selectedTeamTask}
@@ -403,6 +421,8 @@ const handleLogout = () => {
         onBonusSubmit={handleBonusSubmit}
         onSkip={handleTaskSkip}
         onHintUse={handleHintUse}
+        onNextTask={handleNextTask}
+        hasNextTask={hasNextTask}
       />
     );
   }
