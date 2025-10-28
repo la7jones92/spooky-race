@@ -30,7 +30,7 @@ export function TeamDetail({ team, onBack }: TeamDetailProps) {
                 <ChevronLeft className="h-5 w-5" />
               </Button>
               <div>
-                <h1>{team.name || 'Unnamed Team'} — Progress Overview</h1>
+                <h1>{team.name || 'Unnamed Team'} {team.entryCode && `(${team.entryCode})`} — Progress Overview</h1>
               </div>
             </div>
             <div className="flex items-center gap-3">

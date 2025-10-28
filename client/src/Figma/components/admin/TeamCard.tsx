@@ -36,7 +36,7 @@ export function TeamCard({ team, onViewDetails }: TeamCardProps) {
     >
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
-          <h3>{team.name || 'Unnamed Team'}</h3>
+          <h3>{team.name || 'Unnamed Team'} {team.entryCode && `(${team.entryCode})`}</h3>
           <Badge variant="outline" className={
             isCompleted 
               ? 'border-primary/30 text-primary' 
