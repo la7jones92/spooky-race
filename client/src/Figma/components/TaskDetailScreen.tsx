@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -28,7 +28,18 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
   const [teamName, setTeamName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const submitBtnRef = useRef<HTMLButtonElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Reset input fields when switching tasks
+  useEffect(() => {
+    setSelectedFile(null);
+    setTextCode('');
+    setErrorMessage('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [teamTask.id]);
 
   const task = teamTask.task;
   if (!task) return null;
@@ -365,6 +376,8 @@ const handleCodeSubmit = async () => {
                       Upload Bonus Photo
                     </Label>
                     <Input
+                      key={teamTask.id}
+                      ref={fileInputRef}
                       id="bonus-photo"
                       type="file"
                       accept="image/*"
@@ -403,7 +416,10 @@ const handleCodeSubmit = async () => {
           <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-4 -mb-6">
             <div className="max-w-4xl mx-auto">
               <Button
-                onClick={onNextTask}
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+                  onNextTask();
+                }}
                 disabled={!canProceedToNext}
                 className={`w-full ${
                   canProceedToNext
