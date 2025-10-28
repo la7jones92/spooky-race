@@ -393,9 +393,6 @@ const handleLogout = () => {
   setError(null);
   setElapsedTime(0);
   
-  // Reset game state to initial
-  setGameState(gameLogic.getGameState());
-  
   // Navigate to login
   setCurrentScreen("login");
   setLoading(false);
