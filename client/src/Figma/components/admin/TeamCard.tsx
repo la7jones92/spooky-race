@@ -7,8 +7,7 @@ import {
   getTeamCurrentTask, 
   getCompletedTasksCount, 
   getLastSubmissionTime, 
-  getTeamStatus,
-  calculateTotalPoints
+  getTeamStatus
 } from "../../lib/helpers";
 
 interface TeamCardProps {
@@ -24,7 +23,6 @@ export function TeamCard({ team, onViewDetails }: TeamCardProps) {
   const status = getTeamStatus(team);
   const isCompleted = status === 'finished';
   const progressPercentage = (completedCount / totalTasks) * 100;
-  const totalPoints = calculateTotalPoints(team);
 
   return (
     <Card 
@@ -36,7 +34,7 @@ export function TeamCard({ team, onViewDetails }: TeamCardProps) {
     >
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
-          <h3>{team.name || 'Unnamed Team'} {team.entryCode && `(${team.entryCode})`}</h3>
+          <h3>{team.name || 'Unnamed Team'}{team.entryCode ? ` (${team.entryCode})` : ''}</h3>
           <Badge variant="outline" className={
             isCompleted 
               ? 'border-primary/30 text-primary' 
@@ -63,10 +61,7 @@ export function TeamCard({ team, onViewDetails }: TeamCardProps) {
           <Progress value={progressPercentage} className="h-2" />
         </div>
 
-        <div className="flex items-center justify-between">
-          <Badge className="bg-primary/20 text-primary border-primary/30">
-            {totalPoints} points
-          </Badge>
+        <div className="flex items-center justify-end">
           <Button 
             onClick={onViewDetails}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
