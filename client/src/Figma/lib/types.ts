@@ -96,6 +96,9 @@ export interface TeamTask {
 
   // Common pattern: API returns the joined Task (client-safe)
   task?: Task;
+  
+  // Admin-only: includes submission history for this team task
+  submissions?: Submission[];
 }
 
 export interface Submission {

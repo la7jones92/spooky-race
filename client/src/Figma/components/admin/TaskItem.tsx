@@ -68,6 +68,35 @@ export function TaskItem({ teamTask }: TaskItemProps) {
             <div className="text-sm text-muted-foreground">
               {task.description}
             </div>
+            {teamTask.submissions && teamTask.submissions.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-sm">Submitted Code:</div>
+                {teamTask.submissions.map((submission) => (
+                  <div 
+                    key={submission.id} 
+                    className={`px-3 py-2 rounded-md border ${
+                      submission.result === 'SUCCESS' 
+                        ? 'border-primary/30 bg-primary/5' 
+                        : 'border-destructive/30 bg-destructive/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <code className="text-sm">{submission.providedCode}</code>
+                      <Badge variant="outline" className={
+                        submission.result === 'SUCCESS'
+                          ? 'border-primary/30 text-primary'
+                          : 'border-destructive/30 text-destructive'
+                      }>
+                        {submission.result === 'SUCCESS' ? '✓ Correct' : '✗ Incorrect'}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {formatTime(submission.createdAt)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {teamTask.bonusPhoto?.url && (
               <div 
                 className="aspect-video rounded-md border border-border overflow-hidden bg-black/20 cursor-pointer hover:opacity-80 transition-opacity relative group"

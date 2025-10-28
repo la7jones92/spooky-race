@@ -679,7 +679,16 @@ app.get("/api/admin/teams/:id", async (req, res) => {
       where: { teamId },
       orderBy: { order: "asc" },
       include: {
-        task: { select: { title: true, points: true, bonusPoints: true, hintPointsPenalty: true } },
+        task: { select: { title: true, description: true, points: true, bonusPoints: true, hintPointsPenalty: true } },
+        submissions: {
+          select: {
+            id: true,
+            providedCode: true,
+            result: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
 
@@ -698,6 +707,7 @@ app.get("/api/admin/teams/:id", async (req, res) => {
       bonusPhotoId: tt.bonusPhotoId,
       task: tt.task,
       bonusPhoto: tt.bonusPhotoId ? { url: `/api/admin/uploads/${tt.bonusPhotoId}` } : null,
+      submissions: tt.submissions,
     }));
 
     // last submission time for this team
