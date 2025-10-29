@@ -46,6 +46,11 @@ useEffect(() => {
     return unsubscribe;
   }, []);
 
+  // Scroll to top when changing screens
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [currentScreen]);
+
   // Timer effect
   useEffect(() => {
     if (!gameState.team.startedAt) return;
