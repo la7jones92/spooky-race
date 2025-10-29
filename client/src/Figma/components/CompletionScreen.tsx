@@ -7,6 +7,7 @@ interface CompletionScreenProps {
   teamName: string;
   completedTasks: number;
   skippedTasks: number;
+  totalTasks: number;
   onBackToTasks: () => void;
 }
 
@@ -14,6 +15,7 @@ export function CompletionScreen({
   teamName,
   completedTasks,
   skippedTasks,
+  totalTasks,
   onBackToTasks
 }: CompletionScreenProps) {
   return (
@@ -44,7 +46,7 @@ export function CompletionScreen({
                   <CheckCircle className="w-5 h-5 text-primary" />
                   <span className="text-sm text-muted-foreground">Tasks Completed</span>
                 </div>
-                <p className="text-2xl text-primary">{completedTasks}/10</p>
+                <p className="text-2xl text-primary">{completedTasks}/{totalTasks}</p>
               </div>
 
               {skippedTasks > 0 && (

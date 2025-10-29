@@ -493,6 +493,7 @@ const handleLogout = () => {
         teamName={gameState.team.name || "Your Team"}
         completedTasks={completedCount}
         skippedTasks={skippedCount}
+        totalTasks={teamTasks.length}
         onBackToTasks={handleBackToTasksFromCompletion}
       />
     );
