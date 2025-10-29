@@ -6,7 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { ArrowLeft, ArrowRight, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, FileText, CheckCircle, Upload, HelpCircle, SkipForward, AlertTriangle, X, Trophy } from 'lucide-react';
 import { TeamTask, TaskStatus, SubmissionResult } from '../lib/types';
 
 interface TaskDetailScreenProps {
@@ -20,9 +20,10 @@ interface TaskDetailScreenProps {
   onHintUse: (taskId: string) => void;
   onNextTask: () => void;
   hasNextTask: boolean;
+  onCompleteRace: () => void;
 }
 
-export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onBonusDelete, onSkip, onHintUse, onNextTask, hasNextTask }: TaskDetailScreenProps) {
+export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onBonusDelete, onSkip, onHintUse, onNextTask, hasNextTask, onCompleteRace }: TaskDetailScreenProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [textCode, setTextCode] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -431,6 +432,26 @@ const handleCodeSubmit = async () => {
               >
                 Next Task
                 <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Complete Race Button - Only on final task */}
+        {!hasNextTask && (
+          <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-4 -mb-6">
+            <div className="max-w-4xl mx-auto">
+              <Button
+                onClick={onCompleteRace}
+                disabled={!isCompleted}
+                className={`w-full ${
+                  isCompleted
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                }`}
+              >
+                <Trophy className="w-4 h-4 mr-2" />
+                Complete Race!
               </Button>
             </div>
           </div>

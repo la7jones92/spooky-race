@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchTeam, fetchTeamTasks, registerTeamApi, skipTask, submitTaskCode, useHint, deleteBonusPhoto } from "./api";
 import { TaskDetailScreen } from "./Figma/components/TaskDetailScreen";
 import { TaskGridScreen } from "./Figma/components/TaskGridScreen";
+import { CompletionScreen } from "./Figma/components/CompletionScreen";
 import { gameLogic, GameState } from "./Figma/lib/gameLogic";
 import { SubmissionResult, TaskStatus, TeamTask } from "./Figma/lib/types";
 import { LoginScreen } from "./Figma/components/LoginScreen";
@@ -21,7 +22,7 @@ export default function App() {
   const [gameState, setGameState] = useState<GameState>(gameLogic.getGameState());
   
   const [selectedTeamTask, setSelectedTeamTask] = useState<TeamTask | null>(null);
-  const [currentScreen, setCurrentScreen] = useState<"login" | "tasks" | "detail">("login");
+  const [currentScreen, setCurrentScreen] = useState<"login" | "tasks" | "detail" | "completion">("login");
   const [elapsedTime, setElapsedTime] = useState(0);
 
 useEffect(() => {
@@ -402,6 +403,14 @@ const handleHintUse = async (taskId: string) => {
     }
   };
 
+  const handleCompleteRace = () => {
+    setCurrentScreen("completion");
+  };
+
+  const handleBackToTasksFromCompletion = () => {
+    setCurrentScreen("tasks");
+  };
+
 const handleLogin = async (teamCode: string) => {
   setError(null);
   setLoading(true);
@@ -461,6 +470,21 @@ const handleLogout = () => {
   console.log("Logged out successfully");
 };
 
+  // Show completion screen
+  if (currentScreen === "completion") {
+    const completedCount = teamTasks.filter(tt => tt.status === TaskStatus.COMPLETED).length;
+    const skippedCount = teamTasks.filter(tt => tt.status === TaskStatus.SKIPPED).length;
+    
+    return (
+      <CompletionScreen
+        teamName={gameState.team.name || "Your Team"}
+        completedTasks={completedCount}
+        skippedTasks={skippedCount}
+        onBackToTasks={handleBackToTasksFromCompletion}
+      />
+    );
+  }
+
   // Show task detail screen when a task is selected
   if (currentScreen === "detail" && selectedTeamTask) {
     const hasNextTask = teamTasks.some(tt => tt.order === selectedTeamTask.order + 1);
@@ -477,6 +501,7 @@ const handleLogout = () => {
         onHintUse={handleHintUse}
         onNextTask={handleNextTask}
         hasNextTask={hasNextTask}
+        onCompleteRace={handleCompleteRace}
       />
     );
   }
