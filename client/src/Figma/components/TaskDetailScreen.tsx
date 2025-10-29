@@ -14,7 +14,7 @@ interface TaskDetailScreenProps {
   onBack: () => void;
   onSubmitCode: (taskId: string, code: string) => Promise<SubmissionResult>;
   onRegisterTeam: (teamName: string) => void;
-  onBonusSubmit: (taskId: string, file: File) => void;
+  onBonusSubmit: (taskId: string, file: File) => Promise<void>;
   onBonusDelete: (taskId: string) => void;
   onSkip: (taskId: string) => void;
   onHintUse: (taskId: string) => void;
@@ -31,12 +31,15 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
   const submitBtnRef = useRef<HTMLButtonElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submittingPhoto, setSubmittingPhoto] = useState(false);
 
   // Reset input fields when switching tasks
   useEffect(() => {
     setSelectedFile(null);
     setTextCode('');
     setErrorMessage('');
+    setSubmitting(false);
+    setSubmittingPhoto(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -58,9 +61,11 @@ export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTea
     }
   };
 
-  const handleBonusPhotoSubmit = () => {
+  const handleBonusPhotoSubmit = async () => {
     if (selectedFile) {
-      onBonusSubmit(task.id, selectedFile);
+      setSubmittingPhoto(true);
+      await onBonusSubmit(task.id, selectedFile);
+      setSubmittingPhoto(false);
     }
   };
 
@@ -212,11 +217,11 @@ const handleCodeSubmit = async () => {
                     <div className="space-y-3">
                       <Button 
                         onClick={handleCodeSubmit}
-                        disabled={!textCode.trim()}
+                        disabled={!textCode.trim() || submitting}
                         className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Complete Task
+                        {submitting ? 'Submitting...' : 'Complete Task'}
                       </Button>
                       
                       <div className="flex gap-2">
@@ -398,7 +403,7 @@ const handleCodeSubmit = async () => {
                   </div>
                   <Button 
                     onClick={handleBonusPhotoSubmit}
-                    disabled={!isCompleted || !selectedFile}
+                    disabled={!isCompleted || !selectedFile || submittingPhoto}
                     className={`w-full ${
                       isCompleted 
                         ? "bg-accent hover:bg-accent/90 text-accent-foreground" 
@@ -406,7 +411,7 @@ const handleCodeSubmit = async () => {
                     }`}
                   >
                     <Upload className="w-4 h-4 mr-2" />
-                    Submit Bonus Photo
+                    {submittingPhoto ? 'Submitting...' : 'Submit Bonus Photo'}
                   </Button>
                 </>
               )}
