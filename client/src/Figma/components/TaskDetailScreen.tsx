@@ -248,32 +248,34 @@ const handleCodeSubmit = async () => {
                           </AlertDialog>
                         )}
 
-                        {/* Skip Button */}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" className="flex-1 border-muted-foreground/30 text-muted-foreground hover:bg-muted/10">
-                              <SkipForward className="w-4 h-4 mr-2" />
-                              Skip
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle className="flex items-center gap-2">
-                                <AlertTriangle className="w-5 h-5 text-destructive" />
-                                Skip Task?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Skipping this task means it will be marked as incomplete. You'll be able to continue to the next task, but this one will be marked as skipped.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleSkipClick} className="bg-destructive hover:bg-destructive/90">
-                                Skip Task
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        {/* Skip Button - Hidden on last task */}
+                        {hasNextTask && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" className="flex-1 border-muted-foreground/30 text-muted-foreground hover:bg-muted/10">
+                                <SkipForward className="w-4 h-4 mr-2" />
+                                Skip
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="flex items-center gap-2">
+                                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                                  Skip Task?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Skipping this task means it will be marked as incomplete. You'll be able to continue to the next task, but this one will be marked as skipped.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleSkipClick} className="bg-destructive hover:bg-destructive/90">
+                                  Skip Task
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                       </div>
                     </div>
                   </div>
