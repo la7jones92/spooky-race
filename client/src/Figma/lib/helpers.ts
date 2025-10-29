@@ -4,16 +4,20 @@ export const getTeamCurrentTask = (team: AdminTeamView): TeamTask | null => {
   const unlocked = team.teamTasks.find(tt => tt.status === TaskStatus.UNLOCKED);
   if (unlocked) return unlocked;
   
-  const completed = team.teamTasks.filter(tt => tt.status === TaskStatus.COMPLETED);
-  if (completed.length === team.teamTasks.length) {
-    return team.teamTasks[team.teamTasks.length - 1]; // Last task if all complete
+  const completedOrSkipped = team.teamTasks.filter(tt => 
+    tt.status === TaskStatus.COMPLETED || tt.status === TaskStatus.SKIPPED
+  );
+  if (completedOrSkipped.length === team.teamTasks.length) {
+    return team.teamTasks[team.teamTasks.length - 1]; // Last task if all complete/skipped
   }
   
   return team.teamTasks[0]; // First task if nothing unlocked
 };
 
 export const getCompletedTasksCount = (team: AdminTeamView): number => {
-  return team.teamTasks.filter(tt => tt.status === TaskStatus.COMPLETED).length;
+  return team.teamTasks.filter(tt => 
+    tt.status === TaskStatus.COMPLETED || tt.status === TaskStatus.SKIPPED
+  ).length;
 };
 
 export const formatTime = (isoString: string | null | undefined): string => {
