@@ -21,9 +21,10 @@ interface TaskDetailScreenProps {
   onNextTask: () => void;
   hasNextTask: boolean;
   onCompleteRace: () => void;
+  loadingNextTask: boolean;
 }
 
-export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onBonusDelete, onSkip, onHintUse, onNextTask, hasNextTask, onCompleteRace }: TaskDetailScreenProps) {
+export function TaskDetailScreen({ teamTask, onBack, onSubmitCode, onRegisterTeam, onBonusSubmit, onBonusDelete, onSkip, onHintUse, onNextTask, hasNextTask, onCompleteRace, loadingNextTask }: TaskDetailScreenProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [textCode, setTextCode] = useState('');
   const [teamName, setTeamName] = useState('');
@@ -428,15 +429,15 @@ const handleCodeSubmit = async () => {
                   window.scrollTo({ top: 0, behavior: 'instant' });
                   onNextTask();
                 }}
-                disabled={!canProceedToNext}
+                disabled={!canProceedToNext || loadingNextTask}
                 className={`w-full ${
-                  canProceedToNext
+                  canProceedToNext && !loadingNextTask
                     ? 'bg-primary hover:bg-primary/90 text-primary-foreground'
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}
               >
-                Next Task
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {loadingNextTask ? 'Loading...' : 'Next Task'}
+                {!loadingNextTask && <ArrowRight className="w-4 h-4 ml-2" />}
               </Button>
             </div>
           </div>

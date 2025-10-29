@@ -24,6 +24,7 @@ export default function App() {
   const [selectedTeamTask, setSelectedTeamTask] = useState<TeamTask | null>(null);
   const [currentScreen, setCurrentScreen] = useState<"login" | "tasks" | "detail" | "completion">("login");
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [loadingNextTask, setLoadingNextTask] = useState(false);
 
 useEffect(() => {
   const saved = localStorage.getItem("entryCode");
@@ -392,8 +393,13 @@ const handleHintUse = async (taskId: string) => {
     setSelectedTeamTask(null);
   };
 
-  const handleNextTask = () => {
-    if (!selectedTeamTask) return;
+  const handleNextTask = async () => {
+    if (!selectedTeamTask || loadingNextTask) return;
+    
+    setLoadingNextTask(true);
+    
+    // 1 second delay for smoother transition
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Find the next task in order
     const currentOrder = selectedTeamTask.order;
@@ -406,6 +412,8 @@ const handleHintUse = async (taskId: string) => {
       // No next task, go back to grid
       handleBackToTasks();
     }
+    
+    setLoadingNextTask(false);
   };
 
   const handleCompleteRace = () => {
@@ -507,6 +515,7 @@ const handleLogout = () => {
         onNextTask={handleNextTask}
         hasNextTask={hasNextTask}
         onCompleteRace={handleCompleteRace}
+        loadingNextTask={loadingNextTask}
       />
     );
   }
